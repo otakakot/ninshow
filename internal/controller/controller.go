@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/otakakot/ninshow/pkg/api"
 )
@@ -13,6 +14,8 @@ type Controller struct {
 
 // Health implements api.Handler.
 func (*Controller) Health(ctx context.Context) (api.HealthRes, error) {
+	slog.Info("start health controller")
+	defer slog.Info("end health controller")
 	return &api.HealthOK{}, nil
 }
 
