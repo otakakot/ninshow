@@ -1,0 +1,578 @@
+openapi: 3.0.3
+info:
+  title: NinShow APP
+  description: |-
+    This is the NinShow APP API documentation.
+  termsOfService: https://localhost:8080
+  contact:
+    email: kotaro.otaka@example.com
+  license:
+    name: MIT
+  version: 0.0.1
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Health
+    description: Health
+  - name: IdP
+    description: Identity Provider
+  - name: OP
+    description: OpenID Provider
+  - name: RP
+    description: Relying Party
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health
+      description: Health
+      operationId: health
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+  /idp/signup:
+    post:
+      tags:
+        - IdP
+      summary: Sign Up
+      description: Sign Up
+      operationId: idpSignup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdPSignupRequestSchema'
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+  /idp/signin:
+    post:
+      tags:
+        - IdP
+      summary: Sign In
+      description: Sign In
+      operationId: idpSignin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdPSigninRequestSchema'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /op/.well-known/openid-configuration:
+    get:
+      tags:
+        - OP
+      summary: OpenID Provider Configuration
+      description: OpenID Provider Configuration
+      operationId: opOpenIDConfiguration
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OPOpenIDConfigurationResponseSchema'
+        '500':
+          description: Internal Server Error
+  /op/authorize:
+    get:
+      tags:
+        - OP
+      summary: Authentication Request
+      description: Authentication Request
+      operationId: opAuthorize
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          description: response_type
+          schema:
+            type: string
+            enum:
+              - code
+              - id_token
+              - token
+              - code id_token
+              - code token
+              - id_token token
+              - code id_token token
+        - name: scope
+          in: query
+          required: true
+          description: scope
+          schema:
+            type: string
+            enum:
+              - openid
+              - profile
+              - email
+              - address
+              - phone
+              - offline_access
+        - name: client_id
+          in: query
+          required: true
+          description: client_id
+          schema:
+            type: string
+            format: uri
+            example: http://localhost:8080
+        - name: redirect_uri
+          in: query
+          required: true
+          description: http://localhost:8080/rp/callback
+          schema:
+            type: string
+            format: uri
+            example: http://localhost:8080/rp/callback
+        - name: state
+          in: query
+          required: false
+          description: state
+          schema:
+            type: string
+            example: state
+        - name: nonce
+          in: query
+          required: false
+          description: nonce
+          schema:
+            type: string
+            example: nonce
+      responses:
+        '302':
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:8080/rp/callback
+        '500':
+          description: Internal Server Error
+  /op/login:
+    get:
+      tags:
+        - OP
+      summary: OP Login
+      description: OP Login
+      operationId: opLoginView
+      parameters:
+        - name: auth_request_id
+          in: query
+          required: true
+          description: auth request id
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+    post:
+      tags:
+        - OP
+      summary: OP Login
+      description: OP Login
+      operationId: opLogin
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+  /op/callback:
+    get:
+      tags:
+        - OP
+      summary: OP Callback
+      description: OP Callback
+      operationId: opCallback
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: id
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        '302':
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:8080/rp/callback
+        '500':
+          description: Internal Server Error
+  /op/token:
+    post:
+      tags:
+        - OP
+      summary: OP Token Request
+      description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
+      operationId: opToken
+      requestBody:
+        description: OP Token request body 
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OPTokenRequestSchema'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OPTokenResponseSchema'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    example: invalid_request
+        '500':
+          description: Internal Server Error
+  /op/userinfo:
+    get:
+      tags:
+        - OP
+      summary: UserInfo Request
+      description: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+      operationId: opUserinfo
+      security:
+        - Bearer: []      
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OPUserInfoResponseSchema'
+        '500':
+          description: Internal Server Error
+  /op/revoke:
+    post:
+      tags:
+        - OP
+      summary: OP Revocation Request
+      description: https://openid.net/specs/openid-connect-core-1_0.html#Revocation
+      operationId: opRevoke
+      requestBody:
+        description: OP Revoke request body 
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OPRevokeRequestSchema'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    example: invalid_request
+        '500':
+          description: Internal Server Error
+  /op/certs:
+    get:
+      tags:
+        - OP
+      summary: OP JWK Set
+      description: https://openid-foundation-japan.github.io/rfc7517.ja.html
+      operationId: opCerts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OPJWKSetResponseSchema'
+        '500':
+          description: Internal Server Error
+  /rp/login:
+    get:
+      tags:
+        - RP
+      summary: RP Login
+      description: RP Login
+      operationId: rpLogin
+      responses:
+        '302':
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:8080/op/authorize
+        '500':
+          description: Internal Server Error
+  /rp/callback:
+    get:
+      tags:
+        - RP
+      summary: RP Callback
+      description: RP Callback
+      operationId: rpCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: code
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        - name: state
+          in: query
+          required: true
+          description: state
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    IdPSignupRequestSchema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: username
+          example: username
+        email:
+          type: string
+          format: email
+          example: kotaro.otaka@example.com
+        password:
+          type: string
+          description: password
+          example: password
+      required:
+        - username
+        - password
+    IdPSigninRequestSchema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: username
+          example: username
+        password:
+          type: string
+          description: password
+          example: password
+      required:
+        - username
+        - password
+    OPOpenIDConfigurationResponseSchema:
+      type: object
+      properties:
+        issuer:
+          type: string
+          description: http://localhost:8080/op
+          format: uri
+          example: http://localhost:8080/op
+        authorization_endpoint:
+          type: string
+          description: http://localhost:8080/op/authorize
+          format: uri
+          example: http://localhost:8080/op/authorize
+        token_endpoint:
+          type: string
+          description: http://localhost:8080/op/token
+          format: uri
+          example: http://localhost:8080/op/token
+        userinfo_endpoint:
+          type: string
+          description: http://localhost:8080/op/userinfo
+          format: uri
+          example: http://localhost:8080/op/userinfo
+        jwks_url:
+          type: string
+          description: http://localhost:8080/op/certs
+          format: uri
+          example: http://localhost:8080/op/certs
+        revocation_endpoint:
+          type: string
+          description: http://localhost:8080/op/revoke
+          format: uri
+          example: http://localhost:8080/op/revoke
+      required:
+        - issuer
+        - authorization_endpoint
+        - token_endpoint
+        - userinfo_endpoint
+        - jwks_url
+        - revocation_endpoint
+    OPTokenRequestSchema:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+            - refresh_token
+            - client_credentials
+            - password
+            - urn:ietf:params:oauth:grant-type:device_code
+          description: grant_type
+          example: authorization_code
+        code:
+          type: string
+          description: code
+          example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        redirect_uri:
+          type: string
+          description: http://localhost:8080/rp/callback
+          format: uri
+          example: http://localhost:8080/rp/callback
+      required:
+        - grant_type
+        - code
+        - redirect_uri
+    OPTokenResponseSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse
+      properties:
+        access_token:
+          type: string
+          description: access_token
+          example: access_token
+        token_type:
+          type: string
+          description: token_type
+          example: token_type
+        refresh_token:
+          type: string
+          description: refresh_token
+          example: refresh_token
+        expires_in:
+          type: integer
+          description: expires_in
+          example: 3600
+        id_token:
+          type: string
+          description: id_token
+          example: id_token
+      required:
+        - access_token
+        - token_type
+        - refresh_token
+        - expires_in
+        - id_token
+    OPUserInfoResponseSchema:
+      type: object
+      description: https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
+      properties:
+        sub:
+          type: string
+          description: sub
+          example: sub
+        name:
+          type: string
+          description: name
+          example: name
+      required:
+        - sub
+        - name
+    OPRevokeRequestSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/rfc7009.ja.html#anchor2
+      properties:
+        token:
+          type: string
+          description: token
+          example: token
+        token_type_hint:
+          type: string
+          enum:
+            - access_token
+            - refresh_token
+          description: token_type_hint
+          example: access_token
+      required:
+        - token
+    OPJWKSetResponseSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/rfc7517.ja.html#anchor5
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/OPJWKSetKey'
+      required:
+        - keys
+    OPJWKSetKey:
+      type: object
+      description: jwk set key
+      properties:
+        kid:
+          type: string
+          description: 鍵識別子
+          example: kid
+        kty:
+          type: string
+          description: RSAやEC等の暗号アルゴリズファミリー
+          example: kty
+        use:
+          type: string
+          description: 公開鍵の用途
+          example: use
+        alg:
+          type: string
+          description: 署名検証アルゴリズム
+          example: alg
+        n:
+          type: string
+          description: modulus 公開鍵を復元するための公開鍵の絶対値
+          example: n
+        e:
+          type: string
+          description: exponent 公開鍵を復元するための指数値
+          example: e
+      required:
+        - kid
+        - kty
+        - use
+        - alg
+        - n
+        - e

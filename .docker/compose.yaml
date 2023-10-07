@@ -1,0 +1,17 @@
+services:
+  api:
+    container_name: ${APP_NAME}-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - workdir=cmd/api
+    ports:
+      - ${API_PORT}:8080
+    environment:
+      ENV: local
+      PORT: 8080
+    volumes:
+      - ../:/app
+    restart: always
+  
