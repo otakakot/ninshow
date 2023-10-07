@@ -53,6 +53,9 @@ github.com/ogen-go/ogen/openapi
 github.com/ogen-go/ogen/otelogen
 github.com/ogen-go/ogen/uri
 github.com/ogen-go/ogen/validate
+# github.com/rs/cors v1.10.1
+## explicit; go 1.13
+github.com/rs/cors
 # github.com/segmentio/asm v1.2.0
 ## explicit; go 1.18
 github.com/segmentio/asm/base64
@@ -95,6 +98,10 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/pool
 go.uber.org/zap/internal/stacktrace
 go.uber.org/zap/zapcore
+# golang.org/x/crypto v0.13.0
+## explicit; go 1.17
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 # golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
 ## explicit; go 1.20
 golang.org/x/exp/constraints

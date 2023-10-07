@@ -388,6 +388,7 @@ components:
           example: password
       required:
         - username
+        - email
         - password
     IdPSigninRequestSchema:
       type: object

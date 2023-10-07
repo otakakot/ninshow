@@ -140,10 +140,8 @@ func (s *IdPSignupRequestSchema) encodeFields(e *jx.Encoder) {
 		e.Str(s.Username)
 	}
 	{
-		if s.Email.Set {
-			e.FieldStart("email")
-			s.Email.Encode(e)
-		}
+		e.FieldStart("email")
+		e.Str(s.Email)
 	}
 	{
 		e.FieldStart("password")
@@ -179,9 +177,11 @@ func (s *IdPSignupRequestSchema) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"username\"")
 			}
 		case "email":
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.Email.Reset()
-				if err := s.Email.Decode(d); err != nil {
+				v, err := d.Str()
+				s.Email = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -210,7 +210,7 @@ func (s *IdPSignupRequestSchema) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000101,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

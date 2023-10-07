@@ -63,8 +63,8 @@ func (s *IdPSigninRequestSchema) SetPassword(val string) {
 // Ref: #/components/schemas/IdPSignupRequestSchema
 type IdPSignupRequestSchema struct {
 	// Username.
-	Username string    `json:"username"`
-	Email    OptString `json:"email"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 	// Password.
 	Password string `json:"password"`
 }
@@ -75,7 +75,7 @@ func (s *IdPSignupRequestSchema) GetUsername() string {
 }
 
 // GetEmail returns the value of Email.
-func (s *IdPSignupRequestSchema) GetEmail() OptString {
+func (s *IdPSignupRequestSchema) GetEmail() string {
 	return s.Email
 }
 
@@ -90,7 +90,7 @@ func (s *IdPSignupRequestSchema) SetUsername(val string) {
 }
 
 // SetEmail sets the value of Email.
-func (s *IdPSignupRequestSchema) SetEmail(val OptString) {
+func (s *IdPSignupRequestSchema) SetEmail(val string) {
 	s.Email = val
 }
 

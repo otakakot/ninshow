@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/cors"
+
 	"github.com/otakakot/ninshow/internal/controller"
 	"github.com/otakakot/ninshow/pkg/api"
 )
@@ -24,14 +26,17 @@ func main() {
 
 	ctr := &controller.Controller{}
 
-	hdl, err := api.NewServer(ctr, nil)
+	hdl, err := api.NewServer(
+		ctr,
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
-		Handler: hdl,
+		Handler: cors.AllowAll().Handler(hdl),
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

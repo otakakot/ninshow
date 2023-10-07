@@ -16,16 +16,6 @@ func (*Controller) Health(ctx context.Context) (api.HealthRes, error) {
 	return &api.HealthOK{}, nil
 }
 
-// IdpSignin implements api.Handler.
-func (*Controller) IdpSignin(ctx context.Context, req api.OptIdPSigninRequestSchema) (api.IdpSigninRes, error) {
-	panic("unimplemented")
-}
-
-// IdpSignup implements api.Handler.
-func (*Controller) IdpSignup(ctx context.Context, req api.OptIdPSignupRequestSchema) (api.IdpSignupRes, error) {
-	panic("unimplemented")
-}
-
 // OpAuthorize implements api.Handler.
 func (*Controller) OpAuthorize(ctx context.Context, params api.OpAuthorizeParams) (api.OpAuthorizeRes, error) {
 	panic("unimplemented")
