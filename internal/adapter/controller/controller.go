@@ -23,9 +23,12 @@ func NewController(
 }
 
 // Health implements api.Handler.
-func (*Controller) Health(ctx context.Context) (api.HealthRes, error) {
+func (*Controller) Health(
+	_ context.Context,
+) (api.HealthRes, error) {
 	slog.Info("start health controller")
 	defer slog.Info("end health controller")
+
 	return &api.HealthOK{}, nil
 }
 
@@ -42,6 +45,8 @@ func (ctl *Controller) IdpSignup(
 		Username: req.Value.Username,
 		Password: req.Value.Password,
 	}); err != nil {
+		slog.WarnContext(ctx, err.Error())
+
 		return &api.IdpSignupInternalServerError{}, nil
 	}
 
@@ -60,6 +65,8 @@ func (ctl *Controller) IdpSignin(
 		Username: req.Value.Username,
 		Password: req.Value.Password,
 	}); err != nil {
+		slog.WarnContext(ctx, err.Error())
+
 		return &api.IdpSigninUnauthorized{}, nil
 	}
 

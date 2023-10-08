@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -39,36 +38,4 @@ func (ac *Account) ComparePassword(
 	password string,
 ) error {
 	return bcrypt.CompareHashAndPassword(ac.HashPass, []byte(password))
-}
-
-var Accounts = map[string]Account{}
-var mu sync.Mutex
-
-func SaveAccount(
-	account Account,
-) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if _, ok := Accounts[account.Username]; ok {
-		return fmt.Errorf("account already exists")
-	}
-
-	Accounts[account.Username] = account
-
-	return nil
-}
-
-func FindAccount(
-	username string,
-) (*Account, error) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	account, ok := Accounts[username]
-	if !ok {
-		return nil, fmt.Errorf("account not found")
-	}
-
-	return &account, nil
 }

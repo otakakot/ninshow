@@ -24,7 +24,7 @@ func NewAcccount() *Account {
 
 // Save implements repository.Account.
 func (ac *Account) Save(
-	ctx context.Context,
+	_ context.Context,
 	account model.Account,
 ) error {
 	ac.mu.Lock()
@@ -41,7 +41,7 @@ func (ac *Account) Save(
 
 // Find implements repository.Account.
 func (ac *Account) Find(
-	ctx context.Context,
+	_ context.Context,
 	username string,
 ) (*model.Account, error) {
 	ac.mu.Lock()
