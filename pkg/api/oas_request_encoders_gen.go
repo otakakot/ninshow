@@ -55,6 +55,58 @@ func encodeIdpSignupRequest(
 	return nil
 }
 
+func encodeOpLoginRequest(
+	req *OPLoginRequestSchema,
+	r *http.Request,
+) error {
+	const contentType = "application/x-www-form-urlencoded"
+	request := req
+
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "id" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "id",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(request.ID))
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "username" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "username",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(request.Username))
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "password" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "password",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(request.Password))
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	encoded := q.Values().Encode()
+	ht.SetBody(r, strings.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeOpRevokeRequest(
 	req *OPRevokeRequestSchema,
 	r *http.Request,

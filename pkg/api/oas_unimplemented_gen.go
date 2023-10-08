@@ -72,7 +72,7 @@ func (UnimplementedHandler) OpCerts(ctx context.Context) (r OpCertsRes, _ error)
 // OP Login.
 //
 // POST /op/login
-func (UnimplementedHandler) OpLogin(ctx context.Context) (r OpLoginRes, _ error) {
+func (UnimplementedHandler) OpLogin(ctx context.Context, req *OPLoginRequestSchema) (r OpLoginRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

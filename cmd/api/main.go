@@ -23,7 +23,7 @@ func main() {
 
 	idp := interactor.NewIdentityProvider(accountRepo)
 
-	op := interactor.NewOpenIDProvider(kvs)
+	op := interactor.NewOpenIDProvider(kvs, accountRepo)
 
 	rp := interactor.NewRelyingParty()
 

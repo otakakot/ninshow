@@ -182,9 +182,28 @@ func encodeOpCertsResponse(response OpCertsRes, w http.ResponseWriter, span trac
 
 func encodeOpLoginResponse(response OpLoginRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *OpLoginOK:
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
+	case *OpLoginFound:
+		// Encoding response headers.
+		{
+			h := uri.NewHeaderEncoder(w.Header())
+			// Encode "Location" header.
+			{
+				cfg := uri.HeaderParameterEncodingConfig{
+					Name:    "Location",
+					Explode: false,
+				}
+				if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+					if val, ok := response.Location.Get(); ok {
+						return e.EncodeValue(conv.URLToString(val))
+					}
+					return nil
+				}); err != nil {
+					return errors.Wrap(err, "encode Location header")
+				}
+			}
+		}
+		w.WriteHeader(302)
+		span.SetStatus(codes.Ok, http.StatusText(302))
 
 		return nil
 

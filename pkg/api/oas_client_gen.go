@@ -65,7 +65,7 @@ type Invoker interface {
 	// OP Login.
 	//
 	// POST /op/login
-	OpLogin(ctx context.Context) (OpLoginRes, error)
+	OpLogin(ctx context.Context, request *OPLoginRequestSchema) (OpLoginRes, error)
 	// OpLoginView invokes opLoginView operation.
 	//
 	// OP Login.
@@ -740,12 +740,12 @@ func (c *Client) sendOpCerts(ctx context.Context) (res OpCertsRes, err error) {
 // OP Login.
 //
 // POST /op/login
-func (c *Client) OpLogin(ctx context.Context) (OpLoginRes, error) {
-	res, err := c.sendOpLogin(ctx)
+func (c *Client) OpLogin(ctx context.Context, request *OPLoginRequestSchema) (OpLoginRes, error) {
+	res, err := c.sendOpLogin(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendOpLogin(ctx context.Context) (res OpLoginRes, err error) {
+func (c *Client) sendOpLogin(ctx context.Context, request *OPLoginRequestSchema) (res OpLoginRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("opLogin"),
 		semconv.HTTPMethodKey.String("POST"),
@@ -789,6 +789,9 @@ func (c *Client) sendOpLogin(ctx context.Context) (res OpLoginRes, err error) {
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeOpLoginRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "SendRequest"

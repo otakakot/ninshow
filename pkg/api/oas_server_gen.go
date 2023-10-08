@@ -49,7 +49,7 @@ type Handler interface {
 	// OP Login.
 	//
 	// POST /op/login
-	OpLogin(ctx context.Context) (OpLoginRes, error)
+	OpLogin(ctx context.Context, req *OPLoginRequestSchema) (OpLoginRes, error)
 	// OpLoginView implements opLoginView operation.
 	//
 	// OP Login.

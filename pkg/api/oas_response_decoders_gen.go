@@ -205,9 +205,48 @@ func decodeOpCertsResponse(resp *http.Response) (res OpCertsRes, _ error) {
 
 func decodeOpLoginResponse(resp *http.Response) (res OpLoginRes, _ error) {
 	switch resp.StatusCode {
-	case 200:
-		// Code 200.
-		return &OpLoginOK{}, nil
+	case 302:
+		// Code 302.
+		var wrapper OpLoginFound
+		h := uri.NewHeaderDecoder(resp.Header)
+		// Parse "Location" header.
+		{
+			cfg := uri.HeaderParameterDecodingConfig{
+				Name:    "Location",
+				Explode: false,
+			}
+			if err := func() error {
+				if err := h.HasParam(cfg); err == nil {
+					if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+						var wrapperDotLocationVal url.URL
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToURL(val)
+							if err != nil {
+								return err
+							}
+
+							wrapperDotLocationVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						wrapper.Location.SetTo(wrapperDotLocationVal)
+						return nil
+					}); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "parse Location header")
+			}
+		}
+		return &wrapper, nil
 	case 500:
 		// Code 500.
 		return &OpLoginInternalServerError{}, nil

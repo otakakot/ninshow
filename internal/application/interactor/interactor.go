@@ -75,14 +75,17 @@ func (idp *IdentityProvider) Signin(
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
 
 type OpenIDProvider struct {
-	kvs repository.Cache[any]
+	kvs     repository.Cache[any]
+	account repository.Account
 }
 
 func NewOpenIDProvider(
 	kvs repository.Cache[any],
+	account repository.Account,
 ) *OpenIDProvider {
 	return &OpenIDProvider{
-		kvs: kvs,
+		kvs:     kvs,
+		account: account,
 	}
 }
 
@@ -168,6 +171,39 @@ func (*OpenIDProvider) LoginVeiw(
 
 	return &usecase.OpenIDProviderLoginViewOutput{
 		Data: buf,
+	}, nil
+}
+
+// Login implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) Login(
+	ctx context.Context,
+	input usecase.OpenIDProviderLoginInput,
+) (*usecase.OpenIDProviderLoginOutput, error) {
+	account, err := op.account.Find(ctx, input.Username)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find account: %w", err)
+	}
+
+	if err != account.ComparePassword(input.Password) {
+		return nil, fmt.Errorf("failed to compare password: %w", err)
+	}
+
+	var buf bytes.Buffer
+
+	buf.WriteString(input.CallbackURL)
+
+	values := url.Values{
+		"id": {input.ID},
+	}
+
+	buf.WriteByte('?')
+
+	buf.WriteString(values.Encode())
+
+	redirect, _ := url.ParseRequestURI(buf.String())
+
+	return &usecase.OpenIDProviderLoginOutput{
+		RedirectURI: *redirect,
 	}, nil
 }
 

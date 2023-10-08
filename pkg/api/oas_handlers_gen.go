@@ -674,8 +674,27 @@ func (s *Server) handleOpLoginRequest(args [0]string, argsEscaped bool, w http.R
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "OpLogin",
+			ID:   "opLogin",
+		}
 	)
+	request, close, err := s.decodeOpLoginRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
 
 	var response OpLoginRes
 	if m := s.cfg.Middleware; m != nil {
@@ -684,13 +703,13 @@ func (s *Server) handleOpLoginRequest(args [0]string, argsEscaped bool, w http.R
 			OperationName:    "OpLogin",
 			OperationSummary: "OP Login",
 			OperationID:      "opLogin",
-			Body:             nil,
+			Body:             request,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
 
 		type (
-			Request  = struct{}
+			Request  = *OPLoginRequestSchema
 			Params   = struct{}
 			Response = OpLoginRes
 		)
@@ -703,12 +722,12 @@ func (s *Server) handleOpLoginRequest(args [0]string, argsEscaped bool, w http.R
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.OpLogin(ctx)
+				response, err = s.h.OpLogin(ctx, request)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.OpLogin(ctx)
+		response, err = s.h.OpLogin(ctx, request)
 	}
 	if err != nil {
 		recordError("Internal", err)

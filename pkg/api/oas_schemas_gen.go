@@ -220,6 +220,46 @@ func (s *OPJWKSetResponseSchema) SetKeys(val []OPJWKSetKey) {
 
 func (*OPJWKSetResponseSchema) opCertsRes() {}
 
+// Ref: #/components/schemas/OPLoginRequestSchema
+type OPLoginRequestSchema struct {
+	// Id.
+	ID string `json:"id"`
+	// Username.
+	Username string `json:"username"`
+	// Password.
+	Password string `json:"password"`
+}
+
+// GetID returns the value of ID.
+func (s *OPLoginRequestSchema) GetID() string {
+	return s.ID
+}
+
+// GetUsername returns the value of Username.
+func (s *OPLoginRequestSchema) GetUsername() string {
+	return s.Username
+}
+
+// GetPassword returns the value of Password.
+func (s *OPLoginRequestSchema) GetPassword() string {
+	return s.Password
+}
+
+// SetID sets the value of ID.
+func (s *OPLoginRequestSchema) SetID(val string) {
+	s.ID = val
+}
+
+// SetUsername sets the value of Username.
+func (s *OPLoginRequestSchema) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetPassword sets the value of Password.
+func (s *OPLoginRequestSchema) SetPassword(val string) {
+	s.Password = val
+}
+
 // Ref: #/components/schemas/OPOpenIDConfigurationResponseSchema
 type OPOpenIDConfigurationResponseSchema struct {
 	// Http://localhost:8080/op.
@@ -701,15 +741,27 @@ type OpCertsInternalServerError struct{}
 
 func (*OpCertsInternalServerError) opCertsRes() {}
 
+// OpLoginFound is response for OpLogin operation.
+type OpLoginFound struct {
+	Location OptURI
+}
+
+// GetLocation returns the value of Location.
+func (s *OpLoginFound) GetLocation() OptURI {
+	return s.Location
+}
+
+// SetLocation sets the value of Location.
+func (s *OpLoginFound) SetLocation(val OptURI) {
+	s.Location = val
+}
+
+func (*OpLoginFound) opLoginRes() {}
+
 // OpLoginInternalServerError is response for OpLogin operation.
 type OpLoginInternalServerError struct{}
 
 func (*OpLoginInternalServerError) opLoginRes() {}
-
-// OpLoginOK is response for OpLogin operation.
-type OpLoginOK struct{}
-
-func (*OpLoginOK) opLoginRes() {}
 
 // OpLoginViewInternalServerError is response for OpLoginView operation.
 type OpLoginViewInternalServerError struct{}

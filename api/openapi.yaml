@@ -187,9 +187,22 @@ paths:
       summary: OP Login
       description: OP Login
       operationId: opLogin
+      requestBody:
+        description: OP Token request body 
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OPLoginRequestSchema'
       responses:
-        '200':
-          description: OK
+        '302':
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:8080/op/callback
         '500':
           description: Internal Server Error
   /op/callback:
@@ -445,6 +458,25 @@ components:
         - userinfo_endpoint
         - jwks_url
         - revocation_endpoint
+    OPLoginRequestSchema:
+      type: object
+      properties:
+        id:
+          type: string
+          description: id
+          example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        username:
+          type: string
+          description: username
+          example: example
+        password:
+          type: string
+          description: password
+          example: password
+      required:
+        - id
+        - username
+        - password
     OPTokenRequestSchema:
       type: object
       properties:

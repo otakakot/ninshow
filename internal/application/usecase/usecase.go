@@ -34,6 +34,7 @@ type IdentityProviderSigninOutput struct{}
 type OpenIDProviider interface {
 	Autorize(context.Context, OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
 	LoginVeiw(context.Context, OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
+	Login(context.Context, OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
 }
 
 type OpenIDProviderAuthorizeInput struct {
@@ -56,6 +57,17 @@ type OpenIDProviderLoginViewInput struct {
 
 type OpenIDProviderLoginViewOutput struct {
 	Data io.Reader
+}
+
+type OpenIDProviderLoginInput struct {
+	ID          string
+	Username    string
+	Password    string
+	CallbackURL string
+}
+
+type OpenIDProviderLoginOutput struct {
+	RedirectURI url.URL
 }
 
 // Relying Party

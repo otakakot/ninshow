@@ -47,6 +47,8 @@ func (ctl *Controller) IdpSignup(
 	slog.Info("start idp signup controller")
 	defer slog.Info("end idp signup controller")
 
+	slog.Info("signup", "username", req.Value.Username, "password", req.Value.Password)
+
 	if _, err := ctl.idp.Signup(ctx, usecase.IdentityProviderSignupInput{
 		Email:    req.Value.Email,
 		Username: req.Value.Username,
@@ -124,11 +126,28 @@ func (*Controller) OpCerts(ctx context.Context) (api.OpCertsRes, error) {
 }
 
 // OpLogin implements api.Handler.
-func (*Controller) OpLogin(ctx context.Context) (api.OpLoginRes, error) {
+func (ctl *Controller) OpLogin(
+	ctx context.Context,
+	req *api.OPLoginRequestSchema,
+) (api.OpLoginRes, error) {
 	slog.Info("start op login controller")
 	defer slog.Info("end op login controller")
 
-	panic("")
+	output, err := ctl.op.Login(ctx, usecase.OpenIDProviderLoginInput{
+		ID:          req.ID,
+		Username:    req.Username,
+		Password:    req.Password,
+		CallbackURL: "http://localhost:8080/op/callback",
+	})
+	if err != nil {
+		return &api.OpLoginInternalServerError{}, err
+	}
+
+	res := &api.OpLoginFound{}
+
+	res.SetLocation(api.NewOptURI(output.RedirectURI))
+
+	return res, nil
 }
 
 // OpLoginView implements api.Handler.
@@ -136,7 +155,9 @@ func (ctl *Controller) OpLoginView(ctx context.Context, params api.OpLoginViewPa
 	slog.Info("start op login view controller")
 	defer slog.Info("end op login view controller")
 
-	output, err := ctl.op.LoginVeiw(ctx, usecase.OpenIDProviderLoginViewInput{})
+	output, err := ctl.op.LoginVeiw(ctx, usecase.OpenIDProviderLoginViewInput{
+		AuthRequestID: params.AuthRequestID,
+	})
 	if err != nil {
 		return &api.OpLoginViewInternalServerError{}, err
 	}
