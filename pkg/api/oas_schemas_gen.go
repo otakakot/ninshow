@@ -594,25 +594,13 @@ func (*OpAuthorizeInternalServerError) opAuthorizeRes() {}
 type OpAuthorizeResponseType string
 
 const (
-	OpAuthorizeResponseTypeCode             OpAuthorizeResponseType = "code"
-	OpAuthorizeResponseTypeIDToken          OpAuthorizeResponseType = "id_token"
-	OpAuthorizeResponseTypeToken            OpAuthorizeResponseType = "token"
-	OpAuthorizeResponseTypeCodeIDToken      OpAuthorizeResponseType = "code id_token"
-	OpAuthorizeResponseTypeCodeToken        OpAuthorizeResponseType = "code token"
-	OpAuthorizeResponseTypeIDTokenToken     OpAuthorizeResponseType = "id_token token"
-	OpAuthorizeResponseTypeCodeIDTokenToken OpAuthorizeResponseType = "code id_token token"
+	OpAuthorizeResponseTypeCode OpAuthorizeResponseType = "code"
 )
 
 // AllValues returns all OpAuthorizeResponseType values.
 func (OpAuthorizeResponseType) AllValues() []OpAuthorizeResponseType {
 	return []OpAuthorizeResponseType{
 		OpAuthorizeResponseTypeCode,
-		OpAuthorizeResponseTypeIDToken,
-		OpAuthorizeResponseTypeToken,
-		OpAuthorizeResponseTypeCodeIDToken,
-		OpAuthorizeResponseTypeCodeToken,
-		OpAuthorizeResponseTypeIDTokenToken,
-		OpAuthorizeResponseTypeCodeIDTokenToken,
 	}
 }
 
@@ -620,18 +608,6 @@ func (OpAuthorizeResponseType) AllValues() []OpAuthorizeResponseType {
 func (s OpAuthorizeResponseType) MarshalText() ([]byte, error) {
 	switch s {
 	case OpAuthorizeResponseTypeCode:
-		return []byte(s), nil
-	case OpAuthorizeResponseTypeIDToken:
-		return []byte(s), nil
-	case OpAuthorizeResponseTypeToken:
-		return []byte(s), nil
-	case OpAuthorizeResponseTypeCodeIDToken:
-		return []byte(s), nil
-	case OpAuthorizeResponseTypeCodeToken:
-		return []byte(s), nil
-	case OpAuthorizeResponseTypeIDTokenToken:
-		return []byte(s), nil
-	case OpAuthorizeResponseTypeCodeIDTokenToken:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -644,66 +620,36 @@ func (s *OpAuthorizeResponseType) UnmarshalText(data []byte) error {
 	case OpAuthorizeResponseTypeCode:
 		*s = OpAuthorizeResponseTypeCode
 		return nil
-	case OpAuthorizeResponseTypeIDToken:
-		*s = OpAuthorizeResponseTypeIDToken
-		return nil
-	case OpAuthorizeResponseTypeToken:
-		*s = OpAuthorizeResponseTypeToken
-		return nil
-	case OpAuthorizeResponseTypeCodeIDToken:
-		*s = OpAuthorizeResponseTypeCodeIDToken
-		return nil
-	case OpAuthorizeResponseTypeCodeToken:
-		*s = OpAuthorizeResponseTypeCodeToken
-		return nil
-	case OpAuthorizeResponseTypeIDTokenToken:
-		*s = OpAuthorizeResponseTypeIDTokenToken
-		return nil
-	case OpAuthorizeResponseTypeCodeIDTokenToken:
-		*s = OpAuthorizeResponseTypeCodeIDTokenToken
-		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
 
-type OpAuthorizeScope string
+type OpAuthorizeScopeItem string
 
 const (
-	OpAuthorizeScopeOpenid        OpAuthorizeScope = "openid"
-	OpAuthorizeScopeProfile       OpAuthorizeScope = "profile"
-	OpAuthorizeScopeEmail         OpAuthorizeScope = "email"
-	OpAuthorizeScopeAddress       OpAuthorizeScope = "address"
-	OpAuthorizeScopePhone         OpAuthorizeScope = "phone"
-	OpAuthorizeScopeOfflineAccess OpAuthorizeScope = "offline_access"
+	OpAuthorizeScopeItemOpenid  OpAuthorizeScopeItem = "openid"
+	OpAuthorizeScopeItemProfile OpAuthorizeScopeItem = "profile"
+	OpAuthorizeScopeItemEmail   OpAuthorizeScopeItem = "email"
 )
 
-// AllValues returns all OpAuthorizeScope values.
-func (OpAuthorizeScope) AllValues() []OpAuthorizeScope {
-	return []OpAuthorizeScope{
-		OpAuthorizeScopeOpenid,
-		OpAuthorizeScopeProfile,
-		OpAuthorizeScopeEmail,
-		OpAuthorizeScopeAddress,
-		OpAuthorizeScopePhone,
-		OpAuthorizeScopeOfflineAccess,
+// AllValues returns all OpAuthorizeScopeItem values.
+func (OpAuthorizeScopeItem) AllValues() []OpAuthorizeScopeItem {
+	return []OpAuthorizeScopeItem{
+		OpAuthorizeScopeItemOpenid,
+		OpAuthorizeScopeItemProfile,
+		OpAuthorizeScopeItemEmail,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s OpAuthorizeScope) MarshalText() ([]byte, error) {
+func (s OpAuthorizeScopeItem) MarshalText() ([]byte, error) {
 	switch s {
-	case OpAuthorizeScopeOpenid:
+	case OpAuthorizeScopeItemOpenid:
 		return []byte(s), nil
-	case OpAuthorizeScopeProfile:
+	case OpAuthorizeScopeItemProfile:
 		return []byte(s), nil
-	case OpAuthorizeScopeEmail:
-		return []byte(s), nil
-	case OpAuthorizeScopeAddress:
-		return []byte(s), nil
-	case OpAuthorizeScopePhone:
-		return []byte(s), nil
-	case OpAuthorizeScopeOfflineAccess:
+	case OpAuthorizeScopeItemEmail:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -711,25 +657,16 @@ func (s OpAuthorizeScope) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *OpAuthorizeScope) UnmarshalText(data []byte) error {
-	switch OpAuthorizeScope(data) {
-	case OpAuthorizeScopeOpenid:
-		*s = OpAuthorizeScopeOpenid
+func (s *OpAuthorizeScopeItem) UnmarshalText(data []byte) error {
+	switch OpAuthorizeScopeItem(data) {
+	case OpAuthorizeScopeItemOpenid:
+		*s = OpAuthorizeScopeItemOpenid
 		return nil
-	case OpAuthorizeScopeProfile:
-		*s = OpAuthorizeScopeProfile
+	case OpAuthorizeScopeItemProfile:
+		*s = OpAuthorizeScopeItemProfile
 		return nil
-	case OpAuthorizeScopeEmail:
-		*s = OpAuthorizeScopeEmail
-		return nil
-	case OpAuthorizeScopeAddress:
-		*s = OpAuthorizeScopeAddress
-		return nil
-	case OpAuthorizeScopePhone:
-		*s = OpAuthorizeScopePhone
-		return nil
-	case OpAuthorizeScopeOfflineAccess:
-		*s = OpAuthorizeScopeOfflineAccess
+	case OpAuthorizeScopeItemEmail:
+		*s = OpAuthorizeScopeItemEmail
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -1084,7 +1021,8 @@ func (*RpCallbackOK) rpCallbackRes() {}
 
 // RpLoginFound is response for RpLogin operation.
 type RpLoginFound struct {
-	Location OptURI
+	Location  OptURI
+	SetCookie OptString
 }
 
 // GetLocation returns the value of Location.
@@ -1092,9 +1030,19 @@ func (s *RpLoginFound) GetLocation() OptURI {
 	return s.Location
 }
 
+// GetSetCookie returns the value of SetCookie.
+func (s *RpLoginFound) GetSetCookie() OptString {
+	return s.SetCookie
+}
+
 // SetLocation sets the value of Location.
 func (s *RpLoginFound) SetLocation(val OptURI) {
 	s.Location = val
+}
+
+// SetSetCookie sets the value of SetCookie.
+func (s *RpLoginFound) SetSetCookie(val OptString) {
+	s.SetCookie = val
 }
 
 func (*RpLoginFound) rpLoginRes() {}

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
@@ -11,14 +12,20 @@ import (
 var _ api.Handler = (*Controller)(nil)
 
 type Controller struct {
-	account usecase.Account
+	idp usecase.IdentityProvider
+	op  usecase.OpenIDProviider
+	rp  usecase.RelyingParty
 }
 
 func NewController(
-	account usecase.Account,
+	idp usecase.IdentityProvider,
+	op usecase.OpenIDProviider,
+	rp usecase.RelyingParty,
 ) *Controller {
 	return &Controller{
-		account: account,
+		idp: idp,
+		op:  op,
+		rp:  rp,
 	}
 }
 
@@ -40,7 +47,7 @@ func (ctl *Controller) IdpSignup(
 	slog.Info("start idp signup controller")
 	defer slog.Info("end idp signup controller")
 
-	if _, err := ctl.account.Signup(ctx, usecase.AccountSignupInput{
+	if _, err := ctl.idp.Signup(ctx, usecase.IdentityProviderSignupInput{
 		Email:    req.Value.Email,
 		Username: req.Value.Username,
 		Password: req.Value.Password,
@@ -61,7 +68,7 @@ func (ctl *Controller) IdpSignin(
 	slog.Info("start idp signin controller")
 	defer slog.Info("end idp signin controller")
 
-	if _, err := ctl.account.Signin(ctx, usecase.AccountSigninInput{
+	if _, err := ctl.idp.Signin(ctx, usecase.IdentityProviderSigninInput{
 		Username: req.Value.Username,
 		Password: req.Value.Password,
 	}); err != nil {
@@ -74,8 +81,36 @@ func (ctl *Controller) IdpSignin(
 }
 
 // OpAuthorize implements api.Handler.
-func (*Controller) OpAuthorize(ctx context.Context, params api.OpAuthorizeParams) (api.OpAuthorizeRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) OpAuthorize(
+	ctx context.Context,
+	params api.OpAuthorizeParams,
+) (api.OpAuthorizeRes, error) {
+	slog.Info("start op authorize controller")
+	defer slog.Info("end op authorize controller")
+
+	scope := make([]string, len(params.Scope))
+	for i, v := range params.Scope {
+		scope[i] = string(v)
+	}
+
+	output, err := ctl.op.Autorize(ctx, usecase.OpenIDProviderAuthorizeInput{
+		LoginURL:     fmt.Sprintf("%s/op/login", "http://localhost:8080"),
+		ResponseType: string(params.ResponseType),
+		Scope:        scope,
+		ClientID:     params.ClientID.String(),
+		RedirectURI:  params.RedirectURI.String(),
+		State:        params.State.Value,
+		Nonce:        params.Nonce.Value,
+	})
+	if err != nil {
+		return &api.OpAuthorizeInternalServerError{}, err
+	}
+
+	res := &api.OpAuthorizeFound{}
+
+	res.SetLocation(api.NewOptURI(output.RedirectURI))
+
+	return res, nil
 }
 
 // OpCallback implements api.Handler.
@@ -124,6 +159,27 @@ func (*Controller) RpCallback(ctx context.Context, params api.RpCallbackParams) 
 }
 
 // RpLogin implements api.Handler.
-func (*Controller) RpLogin(ctx context.Context) (api.RpLoginRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) RpLogin(
+	ctx context.Context,
+) (api.RpLoginRes, error) {
+	slog.Info("start rp login controller")
+	defer slog.Info("end rp login controller")
+
+	output, err := ctl.rp.Login(ctx, usecase.RelyingPartyLoginInput{
+		OIDCEndpoint: "http://localhost:8080/op/authorize",
+		ClientID:     "test",
+		RedirectURI:  "http://localhost:8080/rp/callback",
+		Scope:        []string{string(api.OpAuthorizeScopeItemOpenid)},
+	})
+	if err != nil {
+		return &api.RpLoginInternalServerError{}, err
+	}
+
+	res := &api.RpLoginFound{}
+
+	res.SetSetCookie(api.NewOptString(output.Cookie.String()))
+
+	res.SetLocation(api.NewOptURI(output.RedirectURI))
+
+	return res, nil
 }

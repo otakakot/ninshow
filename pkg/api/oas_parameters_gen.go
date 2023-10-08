@@ -3,8 +3,11 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/go-faster/errors"
 
 	"github.com/ogen-go/ogen/conv"
 	"github.com/ogen-go/ogen/middleware"
@@ -18,7 +21,7 @@ type OpAuthorizeParams struct {
 	// Response_type.
 	ResponseType OpAuthorizeResponseType
 	// Scope.
-	Scope OpAuthorizeScope
+	Scope []OpAuthorizeScopeItem
 	// Client_id.
 	ClientID url.URL
 	// Http://localhost:8080/rp/callback.
@@ -42,7 +45,7 @@ func unpackOpAuthorizeParams(packed middleware.Parameters) (params OpAuthorizePa
 			Name: "scope",
 			In:   "query",
 		}
-		params.Scope = packed[key].(OpAuthorizeScope)
+		params.Scope = packed[key].([]OpAuthorizeScopeItem)
 	}
 	{
 		key := middleware.ParameterKey{
@@ -135,24 +138,50 @@ func decodeOpAuthorizeParams(args [0]string, argsEscaped bool, r *http.Request) 
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
+				return d.DecodeArray(func(d uri.Decoder) error {
+					var paramsDotScopeVal OpAuthorizeScopeItem
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
 
-				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
 
-				params.Scope = OpAuthorizeScope(c)
-				return nil
+						paramsDotScopeVal = OpAuthorizeScopeItem(c)
+						return nil
+					}(); err != nil {
+						return err
+					}
+					params.Scope = append(params.Scope, paramsDotScopeVal)
+					return nil
+				})
 			}); err != nil {
 				return err
 			}
 			if err := func() error {
-				if err := params.Scope.Validate(); err != nil {
-					return err
+				if params.Scope == nil {
+					return errors.New("nil is invalid value")
+				}
+				var failures []validate.FieldError
+				for i, elem := range params.Scope {
+					if err := func() error {
+						if err := elem.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						failures = append(failures, validate.FieldError{
+							Name:  fmt.Sprintf("[%d]", i),
+							Error: err,
+						})
+					}
+				}
+				if len(failures) > 0 {
+					return &validate.Error{Fields: failures}
 				}
 				return nil
 			}(); err != nil {

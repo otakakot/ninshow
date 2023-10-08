@@ -131,36 +131,18 @@ func (s OpAuthorizeResponseType) Validate() error {
 	switch s {
 	case "code":
 		return nil
-	case "id_token":
-		return nil
-	case "token":
-		return nil
-	case "code id_token":
-		return nil
-	case "code token":
-		return nil
-	case "id_token token":
-		return nil
-	case "code id_token token":
-		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
 
-func (s OpAuthorizeScope) Validate() error {
+func (s OpAuthorizeScopeItem) Validate() error {
 	switch s {
 	case "openid":
 		return nil
 	case "profile":
 		return nil
 	case "email":
-		return nil
-	case "address":
-		return nil
-	case "phone":
-		return nil
-	case "offline_access":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

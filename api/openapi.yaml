@@ -104,25 +104,18 @@ paths:
             type: string
             enum:
               - code
-              - id_token
-              - token
-              - code id_token
-              - code token
-              - id_token token
-              - code id_token token
         - name: scope
           in: query
           required: true
           description: scope
           schema:
-            type: string
-            enum:
-              - openid
-              - profile
-              - email
-              - address
-              - phone
-              - offline_access
+            type: array
+            items:
+              type: string
+              enum:
+                - openid
+                - profile
+                - email
         - name: client_id
           in: query
           required: true
@@ -335,6 +328,10 @@ paths:
                 type: string
                 format: uri
                 example: http://localhost:8080/op/authorize
+            Set-Cookie:
+              schema: 
+                type: string
+                example: state=xxxxxxxxx; Path=/; HttpOnly
         '500':
           description: Internal Server Error
   /rp/callback:

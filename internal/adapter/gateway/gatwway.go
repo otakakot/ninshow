@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
@@ -53,4 +54,47 @@ func (ac *Account) Find(
 	}
 
 	return &account, nil
+}
+
+var _ repository.Cache[any] = (*KVS[any])(nil)
+
+func NewKVS[T any]() *KVS[T] {
+	return &KVS[T]{
+		values: make(map[string]T),
+	}
+}
+
+type KVS[T any] struct {
+	mu     sync.Mutex
+	values map[string]T
+}
+
+func (kvs *KVS[T]) Set(
+	_ context.Context,
+	key string,
+	val T,
+	_ time.Duration,
+) error {
+	kvs.mu.Lock()
+	defer kvs.mu.Unlock()
+
+	kvs.values[key] = val
+
+	return nil
+}
+
+func (kvs *KVS[T]) Get(
+	_ context.Context,
+	key string,
+) (T, error) {
+	var val T
+
+	kvs.mu.Lock()
+	defer kvs.mu.Unlock()
+
+	if _, ok := kvs.values[key]; !ok {
+		return val, fmt.Errorf("key %s not found", key)
+	}
+
+	return kvs.values[key], nil
 }

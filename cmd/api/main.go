@@ -17,11 +17,17 @@ func main() {
 		port = "8080"
 	}
 
-	repo := gateway.NewAcccount()
+	accountRepo := gateway.NewAcccount()
 
-	uc := interactor.NewAcccount(repo)
+	kvs := gateway.NewKVS[any]()
 
-	ctr := controller.NewController(uc)
+	idp := interactor.NewIdentityProvider(accountRepo)
+
+	op := interactor.NewOpenIDProvider(kvs)
+
+	rp := interactor.NewRelyingParty()
+
+	ctr := controller.NewController(idp, op, rp)
 
 	hdl, err := api.NewServer(
 		ctr,
