@@ -1,24 +1,16 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/rs/cors"
 
-	"github.com/otakakot/ninshow/internal/controller"
+	"github.com/otakakot/ninshow/internal/adapter/controller"
+	"github.com/otakakot/ninshow/internal/driver/server"
 	"github.com/otakakot/ninshow/pkg/api"
 )
 
 func main() {
-	slog.Info("start ninshow server")
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -34,32 +26,10 @@ func main() {
 		panic(err)
 	}
 
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", port),
-		Handler: cors.AllowAll().Handler(hdl),
-	}
+	srv := server.NewServer(
+		port,
+		cors.AllowAll().Handler(hdl),
+	)
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-
-	defer stop()
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			panic(err)
-		}
-	}()
-
-	<-ctx.Done()
-
-	slog.Info("start server shutdown")
-
-	ctx, cansel := context.WithTimeout(context.Background(), 5*time.Second)
-
-	defer cansel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		panic(err)
-	}
-
-	slog.Info("done server shutdown")
+	srv.Run()
 }
