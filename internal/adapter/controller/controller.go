@@ -125,12 +125,25 @@ func (*Controller) OpCerts(ctx context.Context) (api.OpCertsRes, error) {
 
 // OpLogin implements api.Handler.
 func (*Controller) OpLogin(ctx context.Context) (api.OpLoginRes, error) {
-	panic("unimplemented")
+	slog.Info("start op login controller")
+	defer slog.Info("end op login controller")
+
+	panic("")
 }
 
 // OpLoginView implements api.Handler.
-func (*Controller) OpLoginView(ctx context.Context, params api.OpLoginViewParams) (api.OpLoginViewRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) OpLoginView(ctx context.Context, params api.OpLoginViewParams) (api.OpLoginViewRes, error) {
+	slog.Info("start op login view controller")
+	defer slog.Info("end op login view controller")
+
+	output, err := ctl.op.LoginVeiw(ctx, usecase.OpenIDProviderLoginViewInput{})
+	if err != nil {
+		return &api.OpLoginViewInternalServerError{}, err
+	}
+
+	return &api.OpLoginViewOK{
+		Data: output.Data,
+	}, nil
 }
 
 // OpOpenIDConfiguration implements api.Handler.

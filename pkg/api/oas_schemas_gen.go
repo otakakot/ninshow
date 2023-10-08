@@ -3,6 +3,7 @@
 package api
 
 import (
+	"io"
 	"net/url"
 
 	"github.com/go-faster/errors"
@@ -715,8 +716,19 @@ type OpLoginViewInternalServerError struct{}
 
 func (*OpLoginViewInternalServerError) opLoginViewRes() {}
 
-// OpLoginViewOK is response for OpLoginView operation.
-type OpLoginViewOK struct{}
+type OpLoginViewOK struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s OpLoginViewOK) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
 
 func (*OpLoginViewOK) opLoginViewRes() {}
 

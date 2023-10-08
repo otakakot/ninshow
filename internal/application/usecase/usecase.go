@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -32,6 +33,7 @@ type IdentityProviderSigninOutput struct{}
 
 type OpenIDProviider interface {
 	Autorize(context.Context, OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
+	LoginVeiw(context.Context, OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
 }
 
 type OpenIDProviderAuthorizeInput struct {
@@ -46,6 +48,14 @@ type OpenIDProviderAuthorizeInput struct {
 
 type OpenIDProviderAuthorizeOutput struct {
 	RedirectURI url.URL
+}
+
+type OpenIDProviderLoginViewInput struct {
+	AuthRequestID string
+}
+
+type OpenIDProviderLoginViewOutput struct {
+	Data io.Reader
 }
 
 // Relying Party

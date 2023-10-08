@@ -3,6 +3,7 @@
 package api
 
 import (
+	"bytes"
 	"io"
 	"mime"
 	"net/http"
@@ -218,7 +219,23 @@ func decodeOpLoginViewResponse(resp *http.Response) (res OpLoginViewRes, _ error
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
-		return &OpLoginViewOK{}, nil
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "text/html":
+			reader := resp.Body
+			b, err := io.ReadAll(reader)
+			if err != nil {
+				return res, err
+			}
+
+			response := OpLoginViewOK{Data: bytes.NewReader(b)}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
 	case 500:
 		// Code 500.
 		return &OpLoginViewInternalServerError{}, nil

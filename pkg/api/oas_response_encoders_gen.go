@@ -3,6 +3,7 @@
 package api
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/go-faster/errors"
@@ -201,8 +202,14 @@ func encodeOpLoginResponse(response OpLoginRes, w http.ResponseWriter, span trac
 func encodeOpLoginViewResponse(response OpLoginViewRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *OpLoginViewOK:
+		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		writer := w
+		if _, err := io.Copy(writer, response); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/url"
 	"strings"
@@ -112,6 +113,61 @@ func (op *OpenIDProvider) Autorize(
 
 	return &usecase.OpenIDProviderAuthorizeOutput{
 		RedirectURI: *redirect,
+	}, nil
+}
+
+// LoginVeiw implements usecase.OpenIDProviider.
+func (*OpenIDProvider) LoginVeiw(
+	ctx context.Context,
+	input usecase.OpenIDProviderLoginViewInput,
+) (*usecase.OpenIDProviderLoginViewOutput, error) {
+	const tmp = `<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>Login</title>
+		</head>
+		<body bgcolor="black" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
+			<form method="POST" action="/op/login" style="height: 200px; width: 200px;">
+
+				<input type="hidden" name="id" value="{{.ID}}">
+
+				<div style="color:white;">
+					<label for="username">Username:</label>
+					<input id="username" name="username" style="width: 100%">
+				</div>
+
+				<div style="color:white;">
+					<label for="password">Password:</label>
+					<input id="password" name="password" style="width: 100%" type="password">
+				</div>
+
+				<p style="color:red; min-height: 1rem;">{{.Error}}</p>
+
+				<button type="submit">Login</button>
+			</form>
+		</body>
+	</html>
+	`
+
+	var loginTmpl, _ = template.New("login").Parse(tmp)
+
+	data := &struct {
+		ID    string
+		Error string
+	}{
+		ID:    input.AuthRequestID,
+		Error: "",
+	}
+
+	buf := new(bytes.Buffer)
+
+	if err := loginTmpl.Execute(buf, data); err != nil {
+		return nil, fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return &usecase.OpenIDProviderLoginViewOutput{
+		Data: buf,
 	}, nil
 }
 
