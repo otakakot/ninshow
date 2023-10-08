@@ -6,6 +6,8 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/otakakot/ninshow/internal/adapter/controller"
+	"github.com/otakakot/ninshow/internal/adapter/gateway"
+	"github.com/otakakot/ninshow/internal/application/interactor"
 	"github.com/otakakot/ninshow/internal/driver/server"
 	"github.com/otakakot/ninshow/pkg/api"
 )
@@ -16,7 +18,11 @@ func main() {
 		port = "8080"
 	}
 
-	ctr := &controller.Controller{}
+	repo := gateway.NewAcccount()
+
+	uc := interactor.NewAcccount(repo)
+
+	ctr := controller.NewController(uc)
 
 	hdl, err := api.NewServer(
 		ctr,
