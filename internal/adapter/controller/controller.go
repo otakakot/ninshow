@@ -22,6 +22,13 @@ func NewController(
 	}
 }
 
+// Health implements api.Handler.
+func (*Controller) Health(ctx context.Context) (api.HealthRes, error) {
+	slog.Info("start health controller")
+	defer slog.Info("end health controller")
+	return &api.HealthOK{}, nil
+}
+
 // IdpSignup implements api.Handler.
 func (ctl *Controller) IdpSignup(
 	ctx context.Context,
@@ -57,13 +64,6 @@ func (ctl *Controller) IdpSignin(
 	}
 
 	return &api.IdpSigninOK{}, nil
-}
-
-// Health implements api.Handler.
-func (*Controller) Health(ctx context.Context) (api.HealthRes, error) {
-	slog.Info("start health controller")
-	defer slog.Info("end health controller")
-	return &api.HealthOK{}, nil
 }
 
 // OpAuthorize implements api.Handler.
