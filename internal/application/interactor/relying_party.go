@@ -112,14 +112,14 @@ func (*RelyingParty) Callback(
 			}
 		</style>
 		<body>
-			<h1>Callback</h1>
-			<p>token type</p>
+			<h1>Relying Party Callback</h1>
+			<h2>token type</h2>
 			<p>{{.TokenType}}</p>
-			<p>access token</p>
+			<h2>access token</h2>
 			<p class="token">{{.AccessToken}}</p>
-			<p>refresh token</p>
+			<h2>refresh token</h2>
 			<p class="token">{{.RefreshToken}}</p>
-			<p>id token</p>
+			<h2>id token</h2>
 			<p class="token">{{.IDToken}}</p>
 		</body>
 	</html>
