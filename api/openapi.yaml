@@ -299,6 +299,8 @@ paths:
       summary: OP Revocation Request
       description: https://openid.net/specs/openid-connect-core-1_0.html#Revocation
       operationId: opRevoke
+      security:
+        - Bearer: []
       requestBody:
         description: OP Revoke request body 
         required: true
@@ -498,9 +500,6 @@ components:
           enum:
             - authorization_code
             - refresh_token
-            - client_credentials
-            - password
-            - urn:ietf:params:oauth:grant-type:device_code
           description: grant_type
           example: authorization_code
         code:
@@ -512,6 +511,22 @@ components:
           description: http://localhost:8080/rp/callback
           format: uri
           example: http://localhost:8080/rp/callback
+        refresh_token:
+          type: string
+          description: refresh_token
+          example: xxxxxxxx
+        client_id:
+          type: string
+          description: client_id
+          example: client_id
+        scope:
+          type: array
+          items:
+            type: string
+            enum:
+              - openid
+              - profile
+              - email
       required:
         - grant_type
         - code
@@ -601,7 +616,7 @@ components:
           example: kid
         kty:
           type: string
-          description: RSAやEC等の暗号アルゴリズファミリー
+          description: RSAやEC等の暗号アルゴリズムファミリー
           example: kty
         use:
           type: string

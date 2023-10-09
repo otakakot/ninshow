@@ -15,8 +15,11 @@ type OpenIDProviider interface {
 	LoginVeiw(context.Context, OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
 	Login(context.Context, OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
 	Callback(context.Context, OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
-	Token(context.Context, OpenIDProviderTokenInput) (*OpenIDProviderTokenOutput, error)
+	AuthorizationCodeGrant(context.Context, OpenIDProviderAuthorizationCodeGrantInput) (*OpenIDProviderAuthorizationCodeGrantOutput, error)
+	RefreshTkenGrant(context.Context, OpenIDProviderRefreshTokenGrantInput) (*OpenIDProviderRefreshTokenGrantOutput, error)
 	Userinfo(context.Context, OpenIDProviderUserinfoInput) (*OpenIDProviderUserinfoOutput, error)
+	Certs(context.Context, OpenIDProviderCertsInput) (*OpenIDProviderCertsOutput, error)
+	Revoke(context.Context, OpenIDProviderRevokeInput) (*OpenIDProviderRevokeOutput, error)
 }
 
 type OpenIDProviderConfigurationInput struct{}
@@ -71,14 +74,31 @@ type OpenIDProviderCallbackOutput struct {
 	RedirectURI url.URL
 }
 
-type OpenIDProviderTokenInput struct {
+type OpenIDProviderAuthorizationCodeGrantInput struct {
 	Issuer          string
 	Code            string
 	AccessTokenSign string
 	IDTokenSignKey  *rsa.PrivateKey
 }
 
-type OpenIDProviderTokenOutput struct {
+type OpenIDProviderAuthorizationCodeGrantOutput struct {
+	TokenType    string
+	AccessToken  string
+	RefreshToken string
+	IDToken      string
+	ExpiresIn    int
+}
+
+type OpenIDProviderRefreshTokenGrantInput struct {
+	RefreshToken    string
+	ClientID        string
+	Scope           []string
+	Issuer          string
+	AccessTokenSign string
+	IDTokenSignKey  *rsa.PrivateKey
+}
+
+type OpenIDProviderRefreshTokenGrantOutput struct {
 	TokenType    string
 	AccessToken  string
 	RefreshToken string
@@ -88,6 +108,7 @@ type OpenIDProviderTokenOutput struct {
 
 type OpenIDProviderUserinfoInput struct {
 	AccessToken model.AccessToken
+	Scope       []string
 }
 
 type OpenIDProviderUserinfoOutput struct {
@@ -95,3 +116,23 @@ type OpenIDProviderUserinfoOutput struct {
 	Profile *string
 	Email   *string
 }
+
+type OpenIDProviderCertsInput struct {
+	PublicKey rsa.PublicKey
+}
+
+type OpenIDProviderCertsOutput struct {
+	Kid string // Kid 鍵識別子
+	Kty string // Kty RSAやEC等の暗号アルゴリズファミリー
+	Use string // Use 公開鍵の用途
+	Alg string // Alg 署名検証アルゴリズム
+	N   string // N modulus 公開鍵を復元するための公開鍵の絶対値
+	E   string // E exponent 公開鍵を復元するための指数値
+}
+
+type OpenIDProviderRevokeInput struct {
+	Hint  string
+	Token string
+}
+
+type OpenIDProviderRevokeOutput struct{}

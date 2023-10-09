@@ -3,6 +3,7 @@
 package api
 
 import (
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -529,6 +530,126 @@ func (s *Server) decodeOpTokenRequest(r *http.Request) (
 				}
 			} else {
 				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "refresh_token",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotRefreshTokenVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotRefreshTokenVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.RefreshToken.SetTo(requestDotRefreshTokenVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"refresh_token\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "client_id",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotClientIDVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotClientIDVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.ClientID.SetTo(requestDotClientIDVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"client_id\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "scope",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					return d.DecodeArray(func(d uri.Decoder) error {
+						var requestDotScopeVal OPTokenRequestSchemaScopeItem
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToString(val)
+							if err != nil {
+								return err
+							}
+
+							requestDotScopeVal = OPTokenRequestSchemaScopeItem(c)
+							return nil
+						}(); err != nil {
+							return err
+						}
+						request.Scope = append(request.Scope, requestDotScopeVal)
+						return nil
+					})
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"scope\"")
+				}
+				if err := func() error {
+					var failures []validate.FieldError
+					for i, elem := range request.Scope {
+						if err := func() error {
+							if err := elem.Validate(); err != nil {
+								return err
+							}
+							return nil
+						}(); err != nil {
+							failures = append(failures, validate.FieldError{
+								Name:  fmt.Sprintf("[%d]", i),
+								Error: err,
+							})
+						}
+					}
+					if len(failures) > 0 {
+						return &validate.Error{Fields: failures}
+					}
+					return nil
+				}(); err != nil {
+					return req, close, errors.Wrap(err, "validate")
+				}
 			}
 		}
 		return &request, close, nil

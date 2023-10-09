@@ -147,6 +147,6 @@ func NewAccessTokenCache() *KVS[struct{}] {
 	return NewKVS[struct{}]()
 }
 
-func NewRefreshTokenCache() *KVS[struct{}] {
-	return NewKVS[struct{}]()
+func NewRefreshTokenCache() *KVS[string] {
+	return NewKVS[string]()
 }

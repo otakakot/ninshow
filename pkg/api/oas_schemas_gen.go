@@ -130,7 +130,7 @@ func (*IdpSignupOK) idpSignupRes() {}
 type OPJWKSetKey struct {
 	// 鍵識別子.
 	Kid string `json:"kid"`
-	// RSAやEC等の暗号アルゴリズファミリー.
+	// RSAやEC等の暗号アルゴリズムファミリー.
 	Kty string `json:"kty"`
 	// 公開鍵の用途.
 	Use string `json:"use"`
@@ -417,6 +417,11 @@ type OPTokenRequestSchema struct {
 	Code string `json:"code"`
 	// Http://localhost:8080/rp/callback.
 	RedirectURI url.URL `json:"redirect_uri"`
+	// Refresh_token.
+	RefreshToken OptString `json:"refresh_token"`
+	// Client_id.
+	ClientID OptString                       `json:"client_id"`
+	Scope    []OPTokenRequestSchemaScopeItem `json:"scope"`
 }
 
 // GetGrantType returns the value of GrantType.
@@ -434,6 +439,21 @@ func (s *OPTokenRequestSchema) GetRedirectURI() url.URL {
 	return s.RedirectURI
 }
 
+// GetRefreshToken returns the value of RefreshToken.
+func (s *OPTokenRequestSchema) GetRefreshToken() OptString {
+	return s.RefreshToken
+}
+
+// GetClientID returns the value of ClientID.
+func (s *OPTokenRequestSchema) GetClientID() OptString {
+	return s.ClientID
+}
+
+// GetScope returns the value of Scope.
+func (s *OPTokenRequestSchema) GetScope() []OPTokenRequestSchemaScopeItem {
+	return s.Scope
+}
+
 // SetGrantType sets the value of GrantType.
 func (s *OPTokenRequestSchema) SetGrantType(val OPTokenRequestSchemaGrantType) {
 	s.GrantType = val
@@ -449,15 +469,27 @@ func (s *OPTokenRequestSchema) SetRedirectURI(val url.URL) {
 	s.RedirectURI = val
 }
 
+// SetRefreshToken sets the value of RefreshToken.
+func (s *OPTokenRequestSchema) SetRefreshToken(val OptString) {
+	s.RefreshToken = val
+}
+
+// SetClientID sets the value of ClientID.
+func (s *OPTokenRequestSchema) SetClientID(val OptString) {
+	s.ClientID = val
+}
+
+// SetScope sets the value of Scope.
+func (s *OPTokenRequestSchema) SetScope(val []OPTokenRequestSchemaScopeItem) {
+	s.Scope = val
+}
+
 // Grant_type.
 type OPTokenRequestSchemaGrantType string
 
 const (
-	OPTokenRequestSchemaGrantTypeAuthorizationCode                     OPTokenRequestSchemaGrantType = "authorization_code"
-	OPTokenRequestSchemaGrantTypeRefreshToken                          OPTokenRequestSchemaGrantType = "refresh_token"
-	OPTokenRequestSchemaGrantTypeClientCredentials                     OPTokenRequestSchemaGrantType = "client_credentials"
-	OPTokenRequestSchemaGrantTypePassword                              OPTokenRequestSchemaGrantType = "password"
-	OPTokenRequestSchemaGrantTypeUrnIetfParamsOAuthGrantTypeDeviceCode OPTokenRequestSchemaGrantType = "urn:ietf:params:oauth:grant-type:device_code"
+	OPTokenRequestSchemaGrantTypeAuthorizationCode OPTokenRequestSchemaGrantType = "authorization_code"
+	OPTokenRequestSchemaGrantTypeRefreshToken      OPTokenRequestSchemaGrantType = "refresh_token"
 )
 
 // AllValues returns all OPTokenRequestSchemaGrantType values.
@@ -465,9 +497,6 @@ func (OPTokenRequestSchemaGrantType) AllValues() []OPTokenRequestSchemaGrantType
 	return []OPTokenRequestSchemaGrantType{
 		OPTokenRequestSchemaGrantTypeAuthorizationCode,
 		OPTokenRequestSchemaGrantTypeRefreshToken,
-		OPTokenRequestSchemaGrantTypeClientCredentials,
-		OPTokenRequestSchemaGrantTypePassword,
-		OPTokenRequestSchemaGrantTypeUrnIetfParamsOAuthGrantTypeDeviceCode,
 	}
 }
 
@@ -477,12 +506,6 @@ func (s OPTokenRequestSchemaGrantType) MarshalText() ([]byte, error) {
 	case OPTokenRequestSchemaGrantTypeAuthorizationCode:
 		return []byte(s), nil
 	case OPTokenRequestSchemaGrantTypeRefreshToken:
-		return []byte(s), nil
-	case OPTokenRequestSchemaGrantTypeClientCredentials:
-		return []byte(s), nil
-	case OPTokenRequestSchemaGrantTypePassword:
-		return []byte(s), nil
-	case OPTokenRequestSchemaGrantTypeUrnIetfParamsOAuthGrantTypeDeviceCode:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -498,14 +521,53 @@ func (s *OPTokenRequestSchemaGrantType) UnmarshalText(data []byte) error {
 	case OPTokenRequestSchemaGrantTypeRefreshToken:
 		*s = OPTokenRequestSchemaGrantTypeRefreshToken
 		return nil
-	case OPTokenRequestSchemaGrantTypeClientCredentials:
-		*s = OPTokenRequestSchemaGrantTypeClientCredentials
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type OPTokenRequestSchemaScopeItem string
+
+const (
+	OPTokenRequestSchemaScopeItemOpenid  OPTokenRequestSchemaScopeItem = "openid"
+	OPTokenRequestSchemaScopeItemProfile OPTokenRequestSchemaScopeItem = "profile"
+	OPTokenRequestSchemaScopeItemEmail   OPTokenRequestSchemaScopeItem = "email"
+)
+
+// AllValues returns all OPTokenRequestSchemaScopeItem values.
+func (OPTokenRequestSchemaScopeItem) AllValues() []OPTokenRequestSchemaScopeItem {
+	return []OPTokenRequestSchemaScopeItem{
+		OPTokenRequestSchemaScopeItemOpenid,
+		OPTokenRequestSchemaScopeItemProfile,
+		OPTokenRequestSchemaScopeItemEmail,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OPTokenRequestSchemaScopeItem) MarshalText() ([]byte, error) {
+	switch s {
+	case OPTokenRequestSchemaScopeItemOpenid:
+		return []byte(s), nil
+	case OPTokenRequestSchemaScopeItemProfile:
+		return []byte(s), nil
+	case OPTokenRequestSchemaScopeItemEmail:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OPTokenRequestSchemaScopeItem) UnmarshalText(data []byte) error {
+	switch OPTokenRequestSchemaScopeItem(data) {
+	case OPTokenRequestSchemaScopeItemOpenid:
+		*s = OPTokenRequestSchemaScopeItemOpenid
 		return nil
-	case OPTokenRequestSchemaGrantTypePassword:
-		*s = OPTokenRequestSchemaGrantTypePassword
+	case OPTokenRequestSchemaScopeItemProfile:
+		*s = OPTokenRequestSchemaScopeItemProfile
 		return nil
-	case OPTokenRequestSchemaGrantTypeUrnIetfParamsOAuthGrantTypeDeviceCode:
-		*s = OPTokenRequestSchemaGrantTypeUrnIetfParamsOAuthGrantTypeDeviceCode
+	case OPTokenRequestSchemaScopeItemEmail:
+		*s = OPTokenRequestSchemaScopeItemEmail
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

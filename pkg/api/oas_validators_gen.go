@@ -3,6 +3,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/go-faster/errors"
 
 	"github.com/ogen-go/ogen/validate"
@@ -104,6 +106,31 @@ func (s *OPTokenRequestSchema) Validate() error {
 			Error: err,
 		})
 	}
+	if err := func() error {
+		var failures []validate.FieldError
+		for i, elem := range s.Scope {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "scope",
+			Error: err,
+		})
+	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
@@ -116,11 +143,18 @@ func (s OPTokenRequestSchemaGrantType) Validate() error {
 		return nil
 	case "refresh_token":
 		return nil
-	case "client_credentials":
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s OPTokenRequestSchemaScopeItem) Validate() error {
+	switch s {
+	case "openid":
 		return nil
-	case "password":
+	case "profile":
 		return nil
-	case "urn:ietf:params:oauth:grant-type:device_code":
+	case "email":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

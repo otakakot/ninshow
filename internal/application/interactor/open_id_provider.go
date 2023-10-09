@@ -3,6 +3,8 @@ package interactor
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"html/template"
 	"net/url"
@@ -23,7 +25,7 @@ type OpenIDProvider struct {
 	param        repository.Cache[model.AuthorizeParam]
 	loggedin     repository.Cache[model.LoggedIn]
 	accessToken  repository.Cache[struct{}]
-	refreshToken repository.Cache[struct{}]
+	refreshToken repository.Cache[string]
 }
 
 func NewOpenIDProvider(
@@ -31,7 +33,7 @@ func NewOpenIDProvider(
 	param repository.Cache[model.AuthorizeParam],
 	loggedin repository.Cache[model.LoggedIn],
 	accessToken repository.Cache[struct{}],
-	refreshToken repository.Cache[struct{}],
+	refreshToken repository.Cache[string],
 ) *OpenIDProvider {
 	return &OpenIDProvider{
 		account:      account,
@@ -249,11 +251,11 @@ func (op *OpenIDProvider) Callback(
 	}, nil
 }
 
-// Token implements usecase.OpenIDProviider.
-func (op *OpenIDProvider) Token(
+// AuthorizationCodeGrant implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) AuthorizationCodeGrant(
 	ctx context.Context,
-	input usecase.OpenIDProviderTokenInput,
-) (*usecase.OpenIDProviderTokenOutput, error) {
+	input usecase.OpenIDProviderAuthorizationCodeGrantInput,
+) (*usecase.OpenIDProviderAuthorizationCodeGrantOutput, error) {
 	loggedin, err := op.loggedin.Get(ctx, input.Code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get logged in cache: %w", err)
@@ -284,7 +286,7 @@ func (op *OpenIDProvider) Token(
 
 	rt := model.GenerateRefreshToken().Base64()
 
-	if err := op.refreshToken.Set(ctx, rt, struct{}{}, 24*time.Hour); err != nil {
+	if err := op.refreshToken.Set(ctx, rt, account.ID, 24*time.Hour); err != nil {
 		return nil, fmt.Errorf("failed to set cache: %w", err)
 	}
 
@@ -310,7 +312,72 @@ func (op *OpenIDProvider) Token(
 		email,
 	).RSA256(input.IDTokenSignKey)
 
-	return &usecase.OpenIDProviderTokenOutput{
+	return &usecase.OpenIDProviderAuthorizationCodeGrantOutput{
+		TokenType:    "Bearer",
+		AccessToken:  at,
+		RefreshToken: rt,
+		IDToken:      it,
+		ExpiresIn:    3600,
+	}, nil
+}
+
+// RefreshTkenGrant implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) RefreshTkenGrant(
+	ctx context.Context,
+	input usecase.OpenIDProviderRefreshTokenGrantInput,
+) (*usecase.OpenIDProviderRefreshTokenGrantOutput, error) {
+	id, err := op.refreshToken.Get(ctx, input.RefreshToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cache: %w", err)
+	}
+
+	account, err := op.account.Find(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find account: %w", err)
+	}
+
+	at := model.GenerateAccessToken(
+		input.Issuer,
+		account.ID,
+		input.ClientID,
+		"jti",
+		input.Scope,
+		input.ClientID,
+	).JWT(input.AccessTokenSign)
+
+	if err := op.accessToken.Set(ctx, at, struct{}{}, time.Hour); err != nil {
+		return nil, fmt.Errorf("failed to set cache: %w", err)
+	}
+
+	rt := model.GenerateRefreshToken().Base64()
+
+	if err := op.refreshToken.Set(ctx, rt, account.ID, 24*time.Hour); err != nil {
+		return nil, fmt.Errorf("failed to set cache: %w", err)
+	}
+
+	var (
+		profile *string
+		email   *string
+	)
+
+	if slices.Contains(input.Scope, "profile") {
+		profile = &account.Username
+	}
+
+	if slices.Contains(input.Scope, "email") {
+		email = &account.Email
+	}
+
+	it := model.GenerateIDToken(
+		input.Issuer,
+		account.ID,
+		input.ClientID,
+		"",
+		profile,
+		email,
+	).RSA256(input.IDTokenSignKey)
+
+	return &usecase.OpenIDProviderRefreshTokenGrantOutput{
 		TokenType:    "Bearer",
 		AccessToken:  at,
 		RefreshToken: rt,
@@ -342,4 +409,54 @@ func (op *OpenIDProvider) Userinfo(
 	}
 
 	return output, nil
+}
+
+// Certs implements usecase.OpenIDProviider.
+func (*OpenIDProvider) Certs(
+	ctx context.Context,
+	input usecase.OpenIDProviderCertsInput,
+) (*usecase.OpenIDProviderCertsOutput, error) {
+	data := make([]byte, 8)
+
+	binary.BigEndian.PutUint64(data, uint64(input.PublicKey.E))
+
+	i := 0
+	for ; i < len(data); i++ {
+		if data[i] != 0x0 {
+			break
+		}
+	}
+
+	e := base64.RawURLEncoding.EncodeToString(data[i:])
+
+	return &usecase.OpenIDProviderCertsOutput{
+		Kid: "12345678",
+		Kty: "RSA",
+		Use: "sig",
+		Alg: "RS256",
+		N:   base64.RawURLEncoding.EncodeToString(input.PublicKey.N.Bytes()),
+		E:   e,
+	}, nil
+}
+
+// Revoke implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) Revoke(
+	ctx context.Context,
+	input usecase.OpenIDProviderRevokeInput,
+) (*usecase.OpenIDProviderRevokeOutput, error) {
+	switch input.Hint {
+	case "access_token":
+		if err := op.accessToken.Del(ctx, input.Token); err != nil {
+			return nil, fmt.Errorf("failed to del cache: %w", err)
+		}
+	case "refresh_token":
+		if err := op.refreshToken.Del(ctx, input.Token); err != nil {
+			return nil, fmt.Errorf("failed to del cache: %w", err)
+		}
+	default:
+		_ = op.refreshToken.Del(ctx, input.Token)
+		_ = op.accessToken.Del(ctx, input.Token)
+	}
+
+	return &usecase.OpenIDProviderRevokeOutput{}, nil
 }

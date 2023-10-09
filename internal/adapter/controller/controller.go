@@ -152,8 +152,28 @@ func (ctl *Controller) OpCallback(
 }
 
 // OpCerts implements api.Handler.
-func (*Controller) OpCerts(ctx context.Context) (api.OpCertsRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) OpCerts(
+	ctx context.Context,
+) (api.OpCertsRes, error) {
+	output, err := ctl.op.Certs(ctx, usecase.OpenIDProviderCertsInput{
+		PublicKey: ctl.config.IDTokenSignKey().PublicKey,
+	})
+	if err != nil {
+		return &api.OpCertsInternalServerError{}, err
+	}
+
+	return &api.OPJWKSetResponseSchema{
+		Keys: []api.OPJWKSetKey{
+			{
+				Kid: output.Kid,
+				Kty: output.Kty,
+				Use: output.Use,
+				Alg: output.Alg,
+				N:   output.N,
+				E:   output.E,
+			},
+		},
+	}, nil
 }
 
 // OpLogin implements api.Handler.
@@ -220,11 +240,6 @@ func (ctl *Controller) OpOpenIDConfiguration(
 	}, nil
 }
 
-// OpRevoke implements api.Handler.
-func (*Controller) OpRevoke(ctx context.Context, req *api.OPRevokeRequestSchema) (api.OpRevokeRes, error) {
-	panic("unimplemented")
-}
-
 // OpToken implements api.Handler.
 func (ctl *Controller) OpToken(
 	ctx context.Context,
@@ -233,29 +248,67 @@ func (ctl *Controller) OpToken(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	output, err := ctl.op.Token(ctx, usecase.OpenIDProviderTokenInput{
-		Issuer:          ctl.config.SelfEndpoint(),
-		Code:            req.Code,
-		AccessTokenSign: ctl.config.AcessTokenSign(),
-		IDTokenSignKey:  ctl.config.IDTokenSignKey(),
-	})
-	if err != nil {
-		return &api.OpTokenInternalServerError{}, err
-	}
+	switch req.GrantType {
+	case api.OPTokenRequestSchemaGrantTypeAuthorizationCode:
+		output, err := ctl.op.AuthorizationCodeGrant(ctx, usecase.OpenIDProviderAuthorizationCodeGrantInput{
+			Issuer:          ctl.config.SelfEndpoint(),
+			Code:            req.Code,
+			AccessTokenSign: ctl.config.AcessTokenSign(),
+			IDTokenSignKey:  ctl.config.IDTokenSignKey(),
+		})
+		if err != nil {
+			return &api.OpTokenInternalServerError{}, err
+		}
 
-	res := &api.OPTokenResponseSchemaHeaders{
-		CacheControl: api.NewOptString("no-store"),
-		Pragma:       api.NewOptString("no-cache"),
-		Response: api.OPTokenResponseSchema{
-			AccessToken:  output.AccessToken,
-			TokenType:    output.TokenType,
-			RefreshToken: output.RefreshToken,
-			ExpiresIn:    output.ExpiresIn,
-			IDToken:      output.IDToken,
-		},
-	}
+		res := &api.OPTokenResponseSchemaHeaders{
+			CacheControl: api.NewOptString("no-store"),
+			Pragma:       api.NewOptString("no-cache"),
+			Response: api.OPTokenResponseSchema{
+				AccessToken:  output.AccessToken,
+				TokenType:    output.TokenType,
+				RefreshToken: output.RefreshToken,
+				ExpiresIn:    output.ExpiresIn,
+				IDToken:      output.IDToken,
+			},
+		}
 
-	return res, nil
+		return res, nil
+	case api.OPTokenRequestSchemaGrantTypeRefreshToken:
+		scope := make([]string, len(req.Scope))
+		for i, v := range req.Scope {
+			scope[i] = string(v)
+		}
+
+		output, err := ctl.op.RefreshTkenGrant(ctx, usecase.OpenIDProviderRefreshTokenGrantInput{
+			RefreshToken:    req.RefreshToken.Value,
+			ClientID:        req.ClientID.Value,
+			Scope:           scope,
+			Issuer:          ctl.config.SelfEndpoint(),
+			AccessTokenSign: ctl.config.AcessTokenSign(),
+			IDTokenSignKey:  ctl.config.IDTokenSignKey(),
+		})
+		if err != nil {
+			return &api.OpTokenInternalServerError{}, err
+		}
+
+		res := &api.OPTokenResponseSchemaHeaders{
+			CacheControl: api.NewOptString("no-store"),
+			Pragma:       api.NewOptString("no-cache"),
+			Response: api.OPTokenResponseSchema{
+				AccessToken:  output.AccessToken,
+				TokenType:    output.TokenType,
+				RefreshToken: output.RefreshToken,
+				ExpiresIn:    output.ExpiresIn,
+				IDToken:      output.IDToken,
+			},
+		}
+
+		return res, nil
+	default:
+		return &api.OpTokenBadRequest{
+			Error: api.NewOptString(fmt.Errorf("invalid grant_type: %s", req.GrantType).Error()),
+		}, nil
+	}
 }
 
 // OpUserinfo implements api.Handler.
@@ -287,6 +340,14 @@ func (ctl *Controller) OpUserinfo(
 	}
 
 	return res, nil
+}
+
+// OpRevoke implements api.Handler.
+func (ctl *Controller) OpRevoke(ctx context.Context, req *api.OPRevokeRequestSchema) (api.OpRevokeRes, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
+	panic("unimplemented")
 }
 
 // RpCallback implements api.Handler.

@@ -196,6 +196,60 @@ func encodeOpTokenRequest(
 			return errors.Wrap(err, "encode query")
 		}
 	}
+	{
+		// Encode "refresh_token" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "refresh_token",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.RefreshToken.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "client_id" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "client_id",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.ClientID.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "scope" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "scope",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeArray(func(e uri.Encoder) error {
+				for i, item := range request.Scope {
+					if err := func() error {
+						return e.EncodeValue(conv.StringToString(string(item)))
+					}(); err != nil {
+						return errors.Wrapf(err, "[%d]", i)
+					}
+				}
+				return nil
+			})
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
 	encoded := q.Values().Encode()
 	ht.SetBody(r, strings.NewReader(encoded), contentType)
 	return nil

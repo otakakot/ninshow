@@ -102,6 +102,21 @@ func (*RelyingParty) Callback(
 
 	// TODO: ID Token を検証する
 
+	if res, err := cli.OpToken(ctx, &api.OPTokenRequestSchema{
+		GrantType:    api.OPTokenRequestSchemaGrantTypeRefreshToken,
+		RefreshToken: api.NewOptString(v.Response.RefreshToken),
+		ClientID:     api.NewOptString(""),
+	}); err != nil {
+		return nil, fmt.Errorf("failed to request token: %w", err)
+	} else {
+		switch res.(type) {
+		case *api.OPTokenResponseSchemaHeaders:
+			slog.Info(fmt.Sprintf("%#v", res))
+		default:
+			slog.Warn(fmt.Sprintf("%T", res))
+		}
+	}
+
 	// Accsess Token を利用し OpenID Provider へ UserInfo Request を送信する
 	cl, err := api.NewClient(input.OIDCEndpoint, &security{token: v.Response.AccessToken})
 	if err != nil {
