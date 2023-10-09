@@ -5,72 +5,14 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/otakakot/ninshow/internal/application/usecase"
-	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
+	"github.com/otakakot/ninshow/pkg/log"
 )
-
-// Identity Provider
-
-var _ usecase.IdentityProvider = (*IdentityProvider)(nil)
-
-type IdentityProvider struct {
-	account repository.Account
-}
-
-func NewIdentityProvider(
-	acccount repository.Account,
-) *IdentityProvider {
-	return &IdentityProvider{
-		account: acccount,
-	}
-}
-
-// Signup implements usecase.IdentityProvider.
-func (idp *IdentityProvider) Signup(
-	ctx context.Context,
-	input usecase.IdentityProviderSignupInput,
-) (*usecase.IdentityProviderSignupOutput, error) {
-	account, err := model.SingupAccount(
-		input.Username,
-		input.Email,
-		input.Password,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to signup account: %w", err)
-	}
-
-	if err := idp.account.Save(ctx, *account); err != nil {
-		return nil, fmt.Errorf("failed to save account: %w", err)
-	}
-
-	return &usecase.IdentityProviderSignupOutput{}, nil
-}
-
-// Signin implements usecase.IdentityProvider.
-func (idp *IdentityProvider) Signin(
-	ctx context.Context,
-	input usecase.IdentityProviderSigninInput,
-) (*usecase.IdentityProviderSigninOutput, error) {
-	account, err := idp.account.Find(ctx, input.Username)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find account: %w", err)
-	}
-
-	if err != account.ComparePassword(input.Password) {
-		return nil, fmt.Errorf("failed to compare password: %w", err)
-	}
-
-	return &usecase.IdentityProviderSigninOutput{}, nil
-}
-
-// OpenID Provider
 
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
 
@@ -89,11 +31,45 @@ func NewOpenIDProvider(
 	}
 }
 
+// Configuration implements usecase.OpenIDProviider.
+func (*OpenIDProvider) Configuration(
+	ctx context.Context, input usecase.OpenIDProviderConfigurationInput,
+) (*usecase.OpenIDProviderConfigurationOutput, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
+	endpoint := "http://localhost:8080"
+
+	issuer, _ := url.Parse(endpoint)
+
+	authorization, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+
+	token, _ := url.Parse(fmt.Sprintf("%s/op/token", endpoint))
+
+	userinfo, _ := url.Parse(fmt.Sprintf("%s/op/userinfo", endpoint))
+
+	jwks, _ := url.Parse(fmt.Sprintf("%s/op/jwks", endpoint))
+
+	revocation, _ := url.Parse(fmt.Sprintf("%s/op/revoke", endpoint))
+
+	return &usecase.OpenIDProviderConfigurationOutput{
+		Issuer:                *issuer,
+		AuthorizationEndpoint: *authorization,
+		TokenEndpoint:         *token,
+		UserinfoEndpoint:      *userinfo,
+		JwksURL:               *jwks,
+		RevocationEndpoint:    *revocation,
+	}, nil
+}
+
 // Autorize implements usecase.OpenIDProviider.
 func (op *OpenIDProvider) Autorize(
 	ctx context.Context,
 	input usecase.OpenIDProviderAuthorizeInput,
 ) (*usecase.OpenIDProviderAuthorizeOutput, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
 	var buf bytes.Buffer
 
 	buf.WriteString(input.LoginURL)
@@ -124,6 +100,9 @@ func (*OpenIDProvider) LoginVeiw(
 	ctx context.Context,
 	input usecase.OpenIDProviderLoginViewInput,
 ) (*usecase.OpenIDProviderLoginViewOutput, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
 	const tmp = `<!DOCTYPE html>
 	<html>
 		<head>
@@ -179,6 +158,9 @@ func (op *OpenIDProvider) Login(
 	ctx context.Context,
 	input usecase.OpenIDProviderLoginInput,
 ) (*usecase.OpenIDProviderLoginOutput, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
 	account, err := op.account.Find(ctx, input.Username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find account: %w", err)
@@ -212,6 +194,9 @@ func (op *OpenIDProvider) Callback(
 	ctx context.Context,
 	input usecase.OpenIDProviderCallbackInput,
 ) (*usecase.OpenIDProviderCallbackOutput, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
 	var buf bytes.Buffer
 
 	val, err := op.kvs.Get(ctx, input.ID)
@@ -242,54 +227,10 @@ func (op *OpenIDProvider) Callback(
 	}, nil
 }
 
-// Relying Party
-
-var _ usecase.RelyingParty = (*RelyingParty)(nil)
-
-type RelyingParty struct{}
-
-func NewRelyingParty() *RelyingParty {
-	return &RelyingParty{}
-}
-
-// Login implements usecase.RelyingParty.
-func (*RelyingParty) Login(
-	_ context.Context,
-	input usecase.RelyingPartyLoginInput,
-) (*usecase.RelyingPartyLoginOutput, error) {
-	var buf bytes.Buffer
-
-	buf.WriteString(input.OIDCEndpoint)
-
-	state := uuid.NewString()
-
-	cookie := &http.Cookie{
-		Name:     "state",
-		Value:    state,
-		Path:     "/",
-		Domain:   "localhost",
-		Expires:  time.Now().Add(time.Hour),
-		Secure:   true,
-		HttpOnly: true,
-	}
-
-	values := url.Values{
-		"response_type": {"code"},                         // Authorization Flow なので code を指定
-		"client_id":     {input.ClientID},                 // RPを識別するためのID OPに登録しておく必要がある
-		"redirect_uri":  {input.RedirectURI},              // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
-		"scope":         {strings.Join(input.Scope, " ")}, // RPが要求するスコープ OPに登録しておく必要がある
-		"state":         {state},                          // CSRF対策のためのstate
-		"nonce":         {uuid.NewString()},               // CSRF対策のためのnonce
-	}
-
-	buf.WriteByte('?')
-
-	buf.WriteString(values.Encode())
-
-	redirect, _ := url.ParseRequestURI(buf.String())
-
-	return &usecase.RelyingPartyLoginOutput{
-		Cookie:      cookie,
-		RedirectURI: *redirect,
-	}, nil
+// Token implements usecase.OpenIDProviider.
+func (*OpenIDProvider) Token(
+	ctx context.Context,
+	input usecase.OpenIDProviderTokenInput,
+) (*usecase.OpenIDProviderTokenOutput, error) {
+	panic("unimplemented")
 }

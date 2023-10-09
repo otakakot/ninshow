@@ -7,6 +7,7 @@ import (
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
 	"github.com/otakakot/ninshow/pkg/api"
+	"github.com/otakakot/ninshow/pkg/log"
 )
 
 var _ api.Handler = (*Controller)(nil)
@@ -31,10 +32,10 @@ func NewController(
 
 // Health implements api.Handler.
 func (*Controller) Health(
-	_ context.Context,
+	ctx context.Context,
 ) (api.HealthRes, error) {
-	slog.Info("start health controller")
-	defer slog.Info("end health controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	return &api.HealthOK{}, nil
 }
@@ -44,8 +45,8 @@ func (ctl *Controller) IdpSignup(
 	ctx context.Context,
 	req api.OptIdPSignupRequestSchema,
 ) (api.IdpSignupRes, error) {
-	slog.Info("start idp signup controller")
-	defer slog.Info("end idp signup controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	slog.Info("signup", "username", req.Value.Username, "password", req.Value.Password)
 
@@ -67,8 +68,8 @@ func (ctl *Controller) IdpSignin(
 	ctx context.Context,
 	req api.OptIdPSigninRequestSchema,
 ) (api.IdpSigninRes, error) {
-	slog.Info("start idp signin controller")
-	defer slog.Info("end idp signin controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	if _, err := ctl.idp.Signin(ctx, usecase.IdentityProviderSigninInput{
 		Username: req.Value.Username,
@@ -87,8 +88,8 @@ func (ctl *Controller) OpAuthorize(
 	ctx context.Context,
 	params api.OpAuthorizeParams,
 ) (api.OpAuthorizeRes, error) {
-	slog.Info("start op authorize controller")
-	defer slog.Info("end op authorize controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	scope := make([]string, len(params.Scope))
 	for i, v := range params.Scope {
@@ -120,8 +121,8 @@ func (ctl *Controller) OpCallback(
 	ctx context.Context,
 	params api.OpCallbackParams,
 ) (api.OpCallbackRes, error) {
-	slog.Info("start op callback controller")
-	defer slog.Info("end op callback controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	output, err := ctl.op.Callback(ctx, usecase.OpenIDProviderCallbackInput{
 		ID: params.ID,
@@ -147,8 +148,8 @@ func (ctl *Controller) OpLogin(
 	ctx context.Context,
 	req *api.OPLoginRequestSchema,
 ) (api.OpLoginRes, error) {
-	slog.Info("start op login controller")
-	defer slog.Info("end op login controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	output, err := ctl.op.Login(ctx, usecase.OpenIDProviderLoginInput{
 		ID:          req.ID,
@@ -169,8 +170,8 @@ func (ctl *Controller) OpLogin(
 
 // OpLoginView implements api.Handler.
 func (ctl *Controller) OpLoginView(ctx context.Context, params api.OpLoginViewParams) (api.OpLoginViewRes, error) {
-	slog.Info("start op login view controller")
-	defer slog.Info("end op login view controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	output, err := ctl.op.LoginVeiw(ctx, usecase.OpenIDProviderLoginViewInput{
 		AuthRequestID: params.AuthRequestID,
@@ -185,8 +186,25 @@ func (ctl *Controller) OpLoginView(ctx context.Context, params api.OpLoginViewPa
 }
 
 // OpOpenIDConfiguration implements api.Handler.
-func (*Controller) OpOpenIDConfiguration(ctx context.Context) (api.OpOpenIDConfigurationRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) OpOpenIDConfiguration(
+	ctx context.Context,
+) (api.OpOpenIDConfigurationRes, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
+	output, err := ctl.op.Configuration(ctx, usecase.OpenIDProviderConfigurationInput{})
+	if err != nil {
+		return &api.OpOpenIDConfigurationInternalServerError{}, err
+	}
+
+	return &api.OPOpenIDConfigurationResponseSchema{
+		Issuer:                output.Issuer,
+		AuthorizationEndpoint: output.AuthorizationEndpoint,
+		TokenEndpoint:         output.TokenEndpoint,
+		UserinfoEndpoint:      output.UserinfoEndpoint,
+		JwksURL:               output.JwksURL,
+		RevocationEndpoint:    output.RevocationEndpoint,
+	}, nil
 }
 
 // OpRevoke implements api.Handler.
@@ -195,8 +213,20 @@ func (*Controller) OpRevoke(ctx context.Context, req *api.OPRevokeRequestSchema)
 }
 
 // OpToken implements api.Handler.
-func (*Controller) OpToken(ctx context.Context, req *api.OPTokenRequestSchema) (api.OpTokenRes, error) {
-	panic("unimplemented")
+func (*Controller) OpToken(
+	ctx context.Context,
+	req *api.OPTokenRequestSchema,
+) (api.OpTokenRes, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
+	res := &api.OPTokenResponseSchemaHeaders{
+		CacheControl: api.NewOptString("no-store"),
+		Pragma:       api.NewOptString("no-cache"),
+		Response:     api.OPTokenResponseSchema{},
+	}
+
+	return res, nil
 }
 
 // OpUserinfo implements api.Handler.
@@ -205,7 +235,10 @@ func (*Controller) OpUserinfo(ctx context.Context) (api.OpUserinfoRes, error) {
 }
 
 // RpCallback implements api.Handler.
-func (*Controller) RpCallback(ctx context.Context, params api.RpCallbackParams) (api.RpCallbackRes, error) {
+func (*Controller) RpCallback(
+	ctx context.Context,
+	params api.RpCallbackParams,
+) (api.RpCallbackRes, error) {
 	panic("unimplemented")
 }
 
@@ -213,8 +246,8 @@ func (*Controller) RpCallback(ctx context.Context, params api.RpCallbackParams) 
 func (ctl *Controller) RpLogin(
 	ctx context.Context,
 ) (api.RpLoginRes, error) {
-	slog.Info("start rp login controller")
-	defer slog.Info("end rp login controller")
+	end := log.StartEnd(ctx)
+	defer end()
 
 	output, err := ctl.rp.Login(ctx, usecase.RelyingPartyLoginInput{
 		OIDCEndpoint: "http://localhost:8080/op/authorize",

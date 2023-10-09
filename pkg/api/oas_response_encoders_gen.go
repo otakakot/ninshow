@@ -303,13 +303,47 @@ func encodeOpRevokeResponse(response OpRevokeRes, w http.ResponseWriter, span tr
 
 func encodeOpTokenResponse(response OpTokenRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *OPTokenResponseSchema:
+	case *OPTokenResponseSchemaHeaders:
 		w.Header().Set("Content-Type", "application/json")
+		// Encoding response headers.
+		{
+			h := uri.NewHeaderEncoder(w.Header())
+			// Encode "Cache-Control" header.
+			{
+				cfg := uri.HeaderParameterEncodingConfig{
+					Name:    "Cache-Control",
+					Explode: false,
+				}
+				if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+					if val, ok := response.CacheControl.Get(); ok {
+						return e.EncodeValue(conv.StringToString(val))
+					}
+					return nil
+				}); err != nil {
+					return errors.Wrap(err, "encode Cache-Control header")
+				}
+			}
+			// Encode "Pragma" header.
+			{
+				cfg := uri.HeaderParameterEncodingConfig{
+					Name:    "Pragma",
+					Explode: false,
+				}
+				if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+					if val, ok := response.Pragma.Get(); ok {
+						return e.EncodeValue(conv.StringToString(val))
+					}
+					return nil
+				}); err != nil {
+					return errors.Wrap(err, "encode Pragma header")
+				}
+			}
+		}
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		e := jx.GetEncoder()
-		response.Encode(e)
+		response.Response.Encode(e)
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}

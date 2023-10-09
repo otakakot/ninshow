@@ -577,7 +577,44 @@ func (s *OPTokenResponseSchema) SetIDToken(val string) {
 	s.IDToken = val
 }
 
-func (*OPTokenResponseSchema) opTokenRes() {}
+// OPTokenResponseSchemaHeaders wraps OPTokenResponseSchema with response headers.
+type OPTokenResponseSchemaHeaders struct {
+	CacheControl OptString
+	Pragma       OptString
+	Response     OPTokenResponseSchema
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *OPTokenResponseSchemaHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetPragma returns the value of Pragma.
+func (s *OPTokenResponseSchemaHeaders) GetPragma() OptString {
+	return s.Pragma
+}
+
+// GetResponse returns the value of Response.
+func (s *OPTokenResponseSchemaHeaders) GetResponse() OPTokenResponseSchema {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *OPTokenResponseSchemaHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetPragma sets the value of Pragma.
+func (s *OPTokenResponseSchemaHeaders) SetPragma(val OptString) {
+	s.Pragma = val
+}
+
+// SetResponse sets the value of Response.
+func (s *OPTokenResponseSchemaHeaders) SetResponse(val OPTokenResponseSchema) {
+	s.Response = val
+}
+
+func (*OPTokenResponseSchemaHeaders) opTokenRes() {}
 
 // Https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse.
 // Ref: #/components/schemas/OPUserInfoResponseSchema

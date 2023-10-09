@@ -3,39 +3,27 @@ package usecase
 import (
 	"context"
 	"io"
-	"net/http"
 	"net/url"
 )
 
-// Identity Provider
-
-type IdentityProvider interface {
-	Signup(context.Context, IdentityProviderSignupInput) (*IdentityProviderSignupOutput, error)
-	Signin(context.Context, IdentityProviderSigninInput) (*IdentityProviderSigninOutput, error)
-}
-
-type IdentityProviderSignupInput struct {
-	Email    string
-	Username string
-	Password string
-}
-
-type IdentityProviderSignupOutput struct{}
-
-type IdentityProviderSigninInput struct {
-	Username string
-	Password string
-}
-
-type IdentityProviderSigninOutput struct{}
-
-// OpenID Provider
-
 type OpenIDProviider interface {
+	Configuration(context.Context, OpenIDProviderConfigurationInput) (*OpenIDProviderConfigurationOutput, error)
 	Autorize(context.Context, OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
 	LoginVeiw(context.Context, OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
 	Login(context.Context, OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
 	Callback(context.Context, OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
+	Token(context.Context, OpenIDProviderTokenInput) (*OpenIDProviderTokenOutput, error)
+}
+
+type OpenIDProviderConfigurationInput struct{}
+
+type OpenIDProviderConfigurationOutput struct {
+	Issuer                url.URL
+	AuthorizationEndpoint url.URL
+	TokenEndpoint         url.URL
+	UserinfoEndpoint      url.URL
+	JwksURL               url.URL
+	RevocationEndpoint    url.URL
 }
 
 type OpenIDProviderAuthorizeInput struct {
@@ -79,20 +67,12 @@ type OpenIDProviderCallbackOutput struct {
 	RedirectURI url.URL
 }
 
-// Relying Party
+type OpenIDProviderTokenInput struct{}
 
-type RelyingParty interface {
-	Login(context.Context, RelyingPartyLoginInput) (*RelyingPartyLoginOutput, error)
-}
-
-type RelyingPartyLoginInput struct {
-	OIDCEndpoint string   // OP の認証エンドポイント
-	ClientID     string   // OP に登録してあるクライアントID
-	RedirectURI  string   // OP に登録してある認証成功後にリダイレクトさせるURI
-	Scope        []string // OP に登録してあるスコープ
-}
-
-type RelyingPartyLoginOutput struct {
-	Cookie      *http.Cookie
-	RedirectURI url.URL
+type OpenIDProviderTokenOutput struct {
+	TokenType    string
+	AccessToken  string
+	RefreshToken string
+	IDToken      string
+	ExpiresIn    int
 }
