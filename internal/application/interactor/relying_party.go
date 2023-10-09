@@ -105,7 +105,12 @@ func (*RelyingParty) Callback(
 	if res, err := cli.OpToken(ctx, &api.OPTokenRequestSchema{
 		GrantType:    api.OPTokenRequestSchemaGrantTypeRefreshToken,
 		RefreshToken: api.NewOptString(v.Response.RefreshToken),
-		ClientID:     api.NewOptString(""),
+		ClientID:     api.NewOptString(input.ClientID),
+		Scope: []api.OPTokenRequestSchemaScopeItem{
+			api.OPTokenRequestSchemaScopeItemOpenid,
+			api.OPTokenRequestSchemaScopeItemEmail,
+			api.OPTokenRequestSchemaScopeItemProfile,
+		},
 	}); err != nil {
 		return nil, fmt.Errorf("failed to request token: %w", err)
 	} else {

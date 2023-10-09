@@ -318,6 +318,7 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 		RefreshToken: rt,
 		IDToken:      it,
 		ExpiresIn:    3600,
+		Scope:        param.Scope,
 	}, nil
 }
 
@@ -383,6 +384,7 @@ func (op *OpenIDProvider) RefreshTkenGrant(
 		RefreshToken: rt,
 		IDToken:      it,
 		ExpiresIn:    3600,
+		Scope:        input.Scope,
 	}, nil
 }
 

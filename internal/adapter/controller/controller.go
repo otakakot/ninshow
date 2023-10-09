@@ -260,6 +260,11 @@ func (ctl *Controller) OpToken(
 			return &api.OpTokenInternalServerError{}, err
 		}
 
+		scope := make([]api.OPTokenResponseSchemaScopeItem, len(output.Scope))
+		for i, v := range req.Scope {
+			scope[i] = api.OPTokenResponseSchemaScopeItem(v)
+		}
+
 		res := &api.OPTokenResponseSchemaHeaders{
 			CacheControl: api.NewOptString("no-store"),
 			Pragma:       api.NewOptString("no-cache"),
@@ -269,6 +274,7 @@ func (ctl *Controller) OpToken(
 				RefreshToken: output.RefreshToken,
 				ExpiresIn:    output.ExpiresIn,
 				IDToken:      output.IDToken,
+				Scope:        scope,
 			},
 		}
 
@@ -291,6 +297,11 @@ func (ctl *Controller) OpToken(
 			return &api.OpTokenInternalServerError{}, err
 		}
 
+		sc := make([]api.OPTokenResponseSchemaScopeItem, len(output.Scope))
+		for i, v := range output.Scope {
+			sc[i] = api.OPTokenResponseSchemaScopeItem(v)
+		}
+
 		res := &api.OPTokenResponseSchemaHeaders{
 			CacheControl: api.NewOptString("no-store"),
 			Pragma:       api.NewOptString("no-cache"),
@@ -300,6 +311,7 @@ func (ctl *Controller) OpToken(
 				RefreshToken: output.RefreshToken,
 				ExpiresIn:    output.ExpiresIn,
 				IDToken:      output.IDToken,
+				Scope:        sc,
 			},
 		}
 
@@ -361,6 +373,7 @@ func (ctl *Controller) RpCallback(
 	output, err := ctl.rp.Callback(ctx, usecase.RelyingPartyCallbackInput{
 		Code:         params.Code,
 		OIDCEndpoint: ctl.config.SelfEndpoint(),
+		ClientID:     ctl.config.RelyingPartyID(),
 	})
 	if err != nil {
 		return &api.RpCallbackInternalServerError{}, err

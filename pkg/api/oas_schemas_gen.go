@@ -587,6 +587,8 @@ type OPTokenResponseSchema struct {
 	ExpiresIn int `json:"expires_in"`
 	// Id_token.
 	IDToken string `json:"id_token"`
+	// Scope.
+	Scope []OPTokenResponseSchemaScopeItem `json:"scope"`
 }
 
 // GetAccessToken returns the value of AccessToken.
@@ -614,6 +616,11 @@ func (s *OPTokenResponseSchema) GetIDToken() string {
 	return s.IDToken
 }
 
+// GetScope returns the value of Scope.
+func (s *OPTokenResponseSchema) GetScope() []OPTokenResponseSchemaScopeItem {
+	return s.Scope
+}
+
 // SetAccessToken sets the value of AccessToken.
 func (s *OPTokenResponseSchema) SetAccessToken(val string) {
 	s.AccessToken = val
@@ -637,6 +644,11 @@ func (s *OPTokenResponseSchema) SetExpiresIn(val int) {
 // SetIDToken sets the value of IDToken.
 func (s *OPTokenResponseSchema) SetIDToken(val string) {
 	s.IDToken = val
+}
+
+// SetScope sets the value of Scope.
+func (s *OPTokenResponseSchema) SetScope(val []OPTokenResponseSchemaScopeItem) {
+	s.Scope = val
 }
 
 // OPTokenResponseSchemaHeaders wraps OPTokenResponseSchema with response headers.
@@ -677,6 +689,54 @@ func (s *OPTokenResponseSchemaHeaders) SetResponse(val OPTokenResponseSchema) {
 }
 
 func (*OPTokenResponseSchemaHeaders) opTokenRes() {}
+
+type OPTokenResponseSchemaScopeItem string
+
+const (
+	OPTokenResponseSchemaScopeItemOpenid  OPTokenResponseSchemaScopeItem = "openid"
+	OPTokenResponseSchemaScopeItemProfile OPTokenResponseSchemaScopeItem = "profile"
+	OPTokenResponseSchemaScopeItemEmail   OPTokenResponseSchemaScopeItem = "email"
+)
+
+// AllValues returns all OPTokenResponseSchemaScopeItem values.
+func (OPTokenResponseSchemaScopeItem) AllValues() []OPTokenResponseSchemaScopeItem {
+	return []OPTokenResponseSchemaScopeItem{
+		OPTokenResponseSchemaScopeItemOpenid,
+		OPTokenResponseSchemaScopeItemProfile,
+		OPTokenResponseSchemaScopeItemEmail,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OPTokenResponseSchemaScopeItem) MarshalText() ([]byte, error) {
+	switch s {
+	case OPTokenResponseSchemaScopeItemOpenid:
+		return []byte(s), nil
+	case OPTokenResponseSchemaScopeItemProfile:
+		return []byte(s), nil
+	case OPTokenResponseSchemaScopeItemEmail:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OPTokenResponseSchemaScopeItem) UnmarshalText(data []byte) error {
+	switch OPTokenResponseSchemaScopeItem(data) {
+	case OPTokenResponseSchemaScopeItemOpenid:
+		*s = OPTokenResponseSchemaScopeItemOpenid
+		return nil
+	case OPTokenResponseSchemaScopeItemProfile:
+		*s = OPTokenResponseSchemaScopeItemProfile
+		return nil
+	case OPTokenResponseSchemaScopeItemEmail:
+		*s = OPTokenResponseSchemaScopeItemEmail
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // Https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse.
 // Ref: #/components/schemas/OPUserInfoResponseSchema

@@ -753,14 +753,25 @@ func (s *OPTokenResponseSchema) encodeFields(e *jx.Encoder) {
 		e.FieldStart("id_token")
 		e.Str(s.IDToken)
 	}
+	{
+		if s.Scope != nil {
+			e.FieldStart("scope")
+			e.ArrStart()
+			for _, elem := range s.Scope {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
 }
 
-var jsonFieldsNameOfOPTokenResponseSchema = [5]string{
+var jsonFieldsNameOfOPTokenResponseSchema = [6]string{
 	0: "access_token",
 	1: "token_type",
 	2: "refresh_token",
 	3: "expires_in",
 	4: "id_token",
+	5: "scope",
 }
 
 // Decode decodes OPTokenResponseSchema from json.
@@ -832,6 +843,23 @@ func (s *OPTokenResponseSchema) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id_token\"")
 			}
+		case "scope":
+			if err := func() error {
+				s.Scope = make([]OPTokenResponseSchemaScopeItem, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem OPTokenResponseSchemaScopeItem
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Scope = append(s.Scope, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scope\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -884,6 +912,48 @@ func (s *OPTokenResponseSchema) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OPTokenResponseSchema) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes OPTokenResponseSchemaScopeItem as json.
+func (s OPTokenResponseSchemaScopeItem) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes OPTokenResponseSchemaScopeItem from json.
+func (s *OPTokenResponseSchemaScopeItem) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode OPTokenResponseSchemaScopeItem to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch OPTokenResponseSchemaScopeItem(v) {
+	case OPTokenResponseSchemaScopeItemOpenid:
+		*s = OPTokenResponseSchemaScopeItemOpenid
+	case OPTokenResponseSchemaScopeItemProfile:
+		*s = OPTokenResponseSchemaScopeItemProfile
+	case OPTokenResponseSchemaScopeItemEmail:
+		*s = OPTokenResponseSchemaScopeItemEmail
+	default:
+		*s = OPTokenResponseSchemaScopeItem(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OPTokenResponseSchemaScopeItem) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OPTokenResponseSchemaScopeItem) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

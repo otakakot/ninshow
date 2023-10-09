@@ -87,6 +87,7 @@ type OpenIDProviderAuthorizationCodeGrantOutput struct {
 	RefreshToken string
 	IDToken      string
 	ExpiresIn    int
+	Scope        []string
 }
 
 type OpenIDProviderRefreshTokenGrantInput struct {
@@ -104,6 +105,7 @@ type OpenIDProviderRefreshTokenGrantOutput struct {
 	RefreshToken string
 	IDToken      string
 	ExpiresIn    int
+	Scope        []string
 }
 
 type OpenIDProviderUserinfoInput struct {
