@@ -67,7 +67,10 @@ type OpenIDProviderCallbackOutput struct {
 	RedirectURI url.URL
 }
 
-type OpenIDProviderTokenInput struct{}
+type OpenIDProviderTokenInput struct {
+	Code     string
+	ClientID string
+}
 
 type OpenIDProviderTokenOutput struct {
 	TokenType    string

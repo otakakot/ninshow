@@ -39,3 +39,7 @@ func (ac *Account) ComparePassword(
 ) error {
 	return bcrypt.CompareHashAndPassword(ac.HashPass, []byte(password))
 }
+
+type LoggedIn struct {
+	AccountID string
+}

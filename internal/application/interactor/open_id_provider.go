@@ -3,6 +3,7 @@ package interactor
 import (
 	"bytes"
 	"context"
+	"crypto/rsa"
 	"fmt"
 	"html/template"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/otakakot/ninshow/internal/application/usecase"
+	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
 	"github.com/otakakot/ninshow/pkg/log"
 )
@@ -17,17 +19,20 @@ import (
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
 
 type OpenIDProvider struct {
-	kvs     repository.Cache[any]
-	account repository.Account
+	param    repository.Cache[model.AuthorizeParam]
+	loggedin repository.Cache[model.LoggedIn]
+	account  repository.Account
 }
 
 func NewOpenIDProvider(
-	kvs repository.Cache[any],
+	param repository.Cache[model.AuthorizeParam],
+	loggedin repository.Cache[model.LoggedIn],
 	account repository.Account,
 ) *OpenIDProvider {
 	return &OpenIDProvider{
-		kvs:     kvs,
-		account: account,
+		loggedin: loggedin,
+		param:    param,
+		account:  account,
 	}
 }
 
@@ -76,7 +81,10 @@ func (op *OpenIDProvider) Autorize(
 
 	id := uuid.NewString()
 
-	if err := op.kvs.Set(ctx, id, input, time.Second); err != nil {
+	if err := op.param.Set(ctx, id, model.AuthorizeParam{
+		RedirectURI: input.RedirectURI,
+		State:       input.State,
+	}, time.Second); err != nil {
 		return nil, fmt.Errorf("failed to set cache: %w", err)
 	}
 
@@ -170,6 +178,12 @@ func (op *OpenIDProvider) Login(
 		return nil, fmt.Errorf("failed to compare password: %w", err)
 	}
 
+	if err := op.loggedin.Set(ctx, input.ID, model.LoggedIn{
+		AccountID: account.ID,
+	}, time.Minute); err != nil {
+		return nil, fmt.Errorf("failed to set cache: %w", err)
+	}
+
 	var buf bytes.Buffer
 
 	buf.WriteString(input.CallbackURL)
@@ -199,21 +213,20 @@ func (op *OpenIDProvider) Callback(
 
 	var buf bytes.Buffer
 
-	val, err := op.kvs.Get(ctx, input.ID)
+	val, err := op.param.Get(ctx, input.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get cache: %w", err)
+		return nil, fmt.Errorf("failed to get param cache: %w", err)
 	}
 
-	v, ok := val.(usecase.OpenIDProviderAuthorizeInput)
-	if !ok {
-		return nil, fmt.Errorf("failed to cast cache: %w", err)
+	if _, err := op.loggedin.Get(ctx, input.ID); err != nil {
+		return nil, fmt.Errorf("failed to get logged in cache: %w", err)
 	}
 
-	buf.WriteString(v.RedirectURI)
+	buf.WriteString(val.RedirectURI)
 
 	values := url.Values{
 		"code":  {input.ID},
-		"state": {v.State},
+		"state": {val.State},
 	}
 
 	buf.WriteByte('?')
@@ -228,9 +241,42 @@ func (op *OpenIDProvider) Callback(
 }
 
 // Token implements usecase.OpenIDProviider.
-func (*OpenIDProvider) Token(
+func (op *OpenIDProvider) Token(
 	ctx context.Context,
 	input usecase.OpenIDProviderTokenInput,
 ) (*usecase.OpenIDProviderTokenOutput, error) {
-	panic("unimplemented")
+	loggedin, err := op.loggedin.Get(ctx, input.Code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logged in cache: %w", err)
+	}
+
+	at := model.GenerateAccessToken(
+		"issuer",
+		loggedin.AccountID,
+		input.ClientID,
+		"jti",
+		"scope",
+		input.ClientID,
+	).JWT("sign")
+
+	param, err := op.param.Get(ctx, input.Code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get param cache: %w", err)
+	}
+
+	it := model.GenerateIDToken(
+		"issuer",
+		loggedin.AccountID,
+		input.ClientID,
+		param.Nonce,
+		"name",
+	).RSA256(&rsa.PrivateKey{})
+
+	return &usecase.OpenIDProviderTokenOutput{
+		TokenType:    "Bearer",
+		AccessToken:  at,
+		RefreshToken: "",
+		IDToken:      it,
+		ExpiresIn:    3600,
+	}, nil
 }

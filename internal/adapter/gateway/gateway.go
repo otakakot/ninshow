@@ -98,3 +98,31 @@ func (kvs *KVS[T]) Get(
 
 	return kvs.values[key], nil
 }
+
+func (kvs *KVS[T]) Del(
+	_ context.Context,
+	key string,
+) error {
+	kvs.mu.Lock()
+	defer kvs.mu.Unlock()
+
+	delete(kvs.values, key)
+
+	return nil
+}
+
+func NewParamCache() *KVS[model.AuthorizeParam] {
+	return NewKVS[model.AuthorizeParam]()
+}
+
+func NewLoggedInCache() *KVS[model.LoggedIn] {
+	return NewKVS[model.LoggedIn]()
+}
+
+func NewAccessTokenCache() *KVS[struct{}] {
+	return NewKVS[struct{}]()
+}
+
+func NewRefreshTokenCache() *KVS[struct{}] {
+	return NewKVS[struct{}]()
+}

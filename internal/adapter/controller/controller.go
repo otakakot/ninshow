@@ -10,23 +10,31 @@ import (
 	"github.com/otakakot/ninshow/pkg/log"
 )
 
+type Config interface {
+	SelfEndpoint() string
+	OIDCEndpoint() string
+}
+
 var _ api.Handler = (*Controller)(nil)
 
 type Controller struct {
-	idp usecase.IdentityProvider
-	op  usecase.OpenIDProviider
-	rp  usecase.RelyingParty
+	config Config
+	idp    usecase.IdentityProvider
+	op     usecase.OpenIDProviider
+	rp     usecase.RelyingParty
 }
 
 func NewController(
+	config Config,
 	idp usecase.IdentityProvider,
 	op usecase.OpenIDProviider,
 	rp usecase.RelyingParty,
 ) *Controller {
 	return &Controller{
-		idp: idp,
-		op:  op,
-		rp:  rp,
+		config: config,
+		idp:    idp,
+		op:     op,
+		rp:     rp,
 	}
 }
 
@@ -97,7 +105,7 @@ func (ctl *Controller) OpAuthorize(
 	}
 
 	output, err := ctl.op.Autorize(ctx, usecase.OpenIDProviderAuthorizeInput{
-		LoginURL:     fmt.Sprintf("%s/op/login", "http://localhost:8080"),
+		LoginURL:     fmt.Sprintf("%s/op/login", ctl.config.SelfEndpoint()),
 		ResponseType: string(params.ResponseType),
 		Scope:        scope,
 		ClientID:     params.ClientID.String(),
@@ -155,7 +163,7 @@ func (ctl *Controller) OpLogin(
 		ID:          req.ID,
 		Username:    req.Username,
 		Password:    req.Password,
-		CallbackURL: "http://localhost:8080/op/callback",
+		CallbackURL: fmt.Sprintf("%s/op/callback", ctl.config.SelfEndpoint()),
 	})
 	if err != nil {
 		return &api.OpLoginInternalServerError{}, err
@@ -250,9 +258,9 @@ func (ctl *Controller) RpLogin(
 	defer end()
 
 	output, err := ctl.rp.Login(ctx, usecase.RelyingPartyLoginInput{
-		OIDCEndpoint: "http://localhost:8080/op/authorize",
+		OIDCEndpoint: fmt.Sprintf("%s/authorize", ctl.config.OIDCEndpoint()),
 		ClientID:     "test",
-		RedirectURI:  "http://localhost:8080/rp/callback",
+		RedirectURI:  fmt.Sprintf("%s/rp/callback", ctl.config.SelfEndpoint()),
 		Scope:        []string{string(api.OpAuthorizeScopeItemOpenid)},
 	})
 	if err != nil {

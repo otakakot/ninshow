@@ -15,4 +15,5 @@ type Account interface {
 type Cache[T any] interface {
 	Set(context.Context, string, T, time.Duration) error
 	Get(context.Context, string) (T, error)
+	Del(context.Context, string) error
 }

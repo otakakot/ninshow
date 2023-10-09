@@ -1,33 +1,31 @@
 package main
 
 import (
-	"os"
-
 	"github.com/otakakot/ninshow/internal/adapter/controller"
 	"github.com/otakakot/ninshow/internal/adapter/gateway"
 	"github.com/otakakot/ninshow/internal/application/interactor"
+	"github.com/otakakot/ninshow/internal/driver/config"
 	"github.com/otakakot/ninshow/internal/driver/middleware"
 	"github.com/otakakot/ninshow/internal/driver/server"
 	"github.com/otakakot/ninshow/pkg/api"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	cfg := config.NewConfig()
 
 	accountRepo := gateway.NewAcccount()
 
-	kvs := gateway.NewKVS[any]()
+	paramCache := gateway.NewParamCache()
+
+	loggedinCache := gateway.NewLoggedInCache()
 
 	idp := interactor.NewIdentityProvider(accountRepo)
 
-	op := interactor.NewOpenIDProvider(kvs, accountRepo)
+	op := interactor.NewOpenIDProvider(paramCache, loggedinCache, accountRepo)
 
 	rp := interactor.NewRelyingParty()
 
-	ctr := controller.NewController(idp, op, rp)
+	ctr := controller.NewController(cfg, idp, op, rp)
 
 	hdl, err := api.NewServer(
 		ctr,
@@ -38,7 +36,7 @@ func main() {
 	}
 
 	srv := server.NewServer(
-		port,
+		cfg.Port(),
 		middleware.CORS(hdl),
 	)
 
