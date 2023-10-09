@@ -116,8 +116,25 @@ func (ctl *Controller) OpAuthorize(
 }
 
 // OpCallback implements api.Handler.
-func (*Controller) OpCallback(ctx context.Context, params api.OpCallbackParams) (api.OpCallbackRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) OpCallback(
+	ctx context.Context,
+	params api.OpCallbackParams,
+) (api.OpCallbackRes, error) {
+	slog.Info("start op callback controller")
+	defer slog.Info("end op callback controller")
+
+	output, err := ctl.op.Callback(ctx, usecase.OpenIDProviderCallbackInput{
+		ID: params.ID,
+	})
+	if err != nil {
+		return &api.OpCallbackInternalServerError{}, err
+	}
+
+	res := &api.OpCallbackFound{}
+
+	res.SetLocation(api.NewOptURI(output.RedirectURI))
+
+	return res, nil
 }
 
 // OpCerts implements api.Handler.

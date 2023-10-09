@@ -207,6 +207,41 @@ func (op *OpenIDProvider) Login(
 	}, nil
 }
 
+// Callback implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) Callback(
+	ctx context.Context,
+	input usecase.OpenIDProviderCallbackInput,
+) (*usecase.OpenIDProviderCallbackOutput, error) {
+	var buf bytes.Buffer
+
+	val, err := op.kvs.Get(ctx, input.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cache: %w", err)
+	}
+
+	v, ok := val.(usecase.OpenIDProviderAuthorizeInput)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast cache: %w", err)
+	}
+
+	buf.WriteString(v.RedirectURI)
+
+	values := url.Values{
+		"code":  {input.ID},
+		"state": {v.State},
+	}
+
+	buf.WriteByte('?')
+
+	buf.WriteString(values.Encode())
+
+	redirect, _ := url.ParseRequestURI(buf.String())
+
+	return &usecase.OpenIDProviderCallbackOutput{
+		RedirectURI: *redirect,
+	}, nil
+}
+
 // Relying Party
 
 var _ usecase.RelyingParty = (*RelyingParty)(nil)

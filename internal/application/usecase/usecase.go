@@ -35,6 +35,7 @@ type OpenIDProviider interface {
 	Autorize(context.Context, OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
 	LoginVeiw(context.Context, OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
 	Login(context.Context, OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
+	Callback(context.Context, OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
 }
 
 type OpenIDProviderAuthorizeInput struct {
@@ -67,6 +68,14 @@ type OpenIDProviderLoginInput struct {
 }
 
 type OpenIDProviderLoginOutput struct {
+	RedirectURI url.URL
+}
+
+type OpenIDProviderCallbackInput struct {
+	ID string
+}
+
+type OpenIDProviderCallbackOutput struct {
 	RedirectURI url.URL
 }
 
