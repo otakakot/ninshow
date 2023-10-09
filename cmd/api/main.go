@@ -19,17 +19,31 @@ func main() {
 
 	loggedinCache := gateway.NewLoggedInCache()
 
+	atCache := gateway.NewAccessTokenCache()
+
+	rtCache := gateway.NewRefreshTokenCache()
+
 	idp := interactor.NewIdentityProvider(accountRepo)
 
-	op := interactor.NewOpenIDProvider(paramCache, loggedinCache, accountRepo)
+	op := interactor.NewOpenIDProvider(
+		accountRepo,
+		paramCache,
+		loggedinCache,
+		atCache,
+		rtCache,
+	)
 
 	rp := interactor.NewRelyingParty()
 
 	ctr := controller.NewController(cfg, idp, op, rp)
 
+	secUC := interactor.NewSecurity(atCache)
+
+	sec := controller.NewSecurity(secUC)
+
 	hdl, err := api.NewServer(
 		ctr,
-		nil,
+		sec,
 	)
 	if err != nil {
 		panic(err)

@@ -403,8 +403,14 @@ func encodeOpUserinfoResponse(response OpUserinfoRes, w http.ResponseWriter, spa
 func encodeRpCallbackResponse(response RpCallbackRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *RpCallbackOK:
+		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		writer := w
+		if _, err := io.Copy(writer, response); err != nil {
+			return errors.Wrap(err, "write")
+		}
 
 		return nil
 

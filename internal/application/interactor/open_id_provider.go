@@ -3,7 +3,6 @@ package interactor
 import (
 	"bytes"
 	"context"
-	"crypto/rsa"
 	"fmt"
 	"html/template"
 	"net/url"
@@ -19,20 +18,26 @@ import (
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
 
 type OpenIDProvider struct {
-	param    repository.Cache[model.AuthorizeParam]
-	loggedin repository.Cache[model.LoggedIn]
-	account  repository.Account
+	account      repository.Account
+	param        repository.Cache[model.AuthorizeParam]
+	loggedin     repository.Cache[model.LoggedIn]
+	accessToken  repository.Cache[struct{}]
+	refreshToken repository.Cache[struct{}]
 }
 
 func NewOpenIDProvider(
+	account repository.Account,
 	param repository.Cache[model.AuthorizeParam],
 	loggedin repository.Cache[model.LoggedIn],
-	account repository.Account,
+	accessToken repository.Cache[struct{}],
+	refreshToken repository.Cache[struct{}],
 ) *OpenIDProvider {
 	return &OpenIDProvider{
-		loggedin: loggedin,
-		param:    param,
-		account:  account,
+		account:      account,
+		loggedin:     loggedin,
+		param:        param,
+		accessToken:  accessToken,
+		refreshToken: refreshToken,
 	}
 }
 
@@ -84,6 +89,7 @@ func (op *OpenIDProvider) Autorize(
 	if err := op.param.Set(ctx, id, model.AuthorizeParam{
 		RedirectURI: input.RedirectURI,
 		State:       input.State,
+		ClientID:    input.ClientID,
 	}, time.Second); err != nil {
 		return nil, fmt.Errorf("failed to set cache: %w", err)
 	}
@@ -250,33 +256,52 @@ func (op *OpenIDProvider) Token(
 		return nil, fmt.Errorf("failed to get logged in cache: %w", err)
 	}
 
-	at := model.GenerateAccessToken(
-		"issuer",
-		loggedin.AccountID,
-		input.ClientID,
-		"jti",
-		"scope",
-		input.ClientID,
-	).JWT("sign")
-
 	param, err := op.param.Get(ctx, input.Code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get param cache: %w", err)
 	}
 
-	it := model.GenerateIDToken(
-		"issuer",
+	at := model.GenerateAccessToken(
+		input.Issuer,
 		loggedin.AccountID,
-		input.ClientID,
+		param.ClientID,
+		"jti",
+		"scope",
+		param.ClientID,
+	).JWT(input.AccessTokenSign)
+
+	if err := op.accessToken.Set(ctx, at, struct{}{}, time.Hour); err != nil {
+		return nil, fmt.Errorf("failed to set cache: %w", err)
+	}
+
+	rt := model.GenerateRefreshToken().Base64()
+
+	if err := op.refreshToken.Set(ctx, rt, struct{}{}, 24*time.Hour); err != nil {
+		return nil, fmt.Errorf("failed to set cache: %w", err)
+	}
+
+	it := model.GenerateIDToken(
+		input.Issuer,
+		loggedin.AccountID,
+		param.ClientID,
 		param.Nonce,
 		"name",
-	).RSA256(&rsa.PrivateKey{})
+	).RSA256(input.IDTokenSignKey)
 
 	return &usecase.OpenIDProviderTokenOutput{
 		TokenType:    "Bearer",
 		AccessToken:  at,
-		RefreshToken: "",
+		RefreshToken: rt,
 		IDToken:      it,
 		ExpiresIn:    3600,
 	}, nil
+}
+
+// Userinfo implements usecase.OpenIDProviider.
+func (*OpenIDProvider) Userinfo(
+	ctx context.Context,
+	input usecase.OpenIDProviderUserinfoInput,
+) (*usecase.OpenIDProviderUserinfoOutput, error) {
+	// TODO: Access Token のスコープに応じてユーザー情報を返す
+	return &usecase.OpenIDProviderUserinfoOutput{}, nil
 }

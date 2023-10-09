@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"crypto/rsa"
 	"io"
 	"net/url"
 )
@@ -13,6 +14,7 @@ type OpenIDProviider interface {
 	Login(context.Context, OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
 	Callback(context.Context, OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
 	Token(context.Context, OpenIDProviderTokenInput) (*OpenIDProviderTokenOutput, error)
+	Userinfo(context.Context, OpenIDProviderUserinfoInput) (*OpenIDProviderUserinfoOutput, error)
 }
 
 type OpenIDProviderConfigurationInput struct{}
@@ -68,8 +70,10 @@ type OpenIDProviderCallbackOutput struct {
 }
 
 type OpenIDProviderTokenInput struct {
-	Code     string
-	ClientID string
+	Issuer          string
+	Code            string
+	AccessTokenSign string
+	IDTokenSignKey  *rsa.PrivateKey
 }
 
 type OpenIDProviderTokenOutput struct {
@@ -79,3 +83,7 @@ type OpenIDProviderTokenOutput struct {
 	IDToken      string
 	ExpiresIn    int
 }
+
+type OpenIDProviderUserinfoInput struct{}
+
+type OpenIDProviderUserinfoOutput struct{}

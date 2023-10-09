@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"crypto/rsa"
 	"fmt"
 	"log/slog"
 
@@ -13,6 +14,9 @@ import (
 type Config interface {
 	SelfEndpoint() string
 	OIDCEndpoint() string
+	IDTokenSignKey() *rsa.PrivateKey
+	AcessTokenSign() string
+	RelyingPartyID() string
 }
 
 var _ api.Handler = (*Controller)(nil)
@@ -221,33 +225,71 @@ func (*Controller) OpRevoke(ctx context.Context, req *api.OPRevokeRequestSchema)
 }
 
 // OpToken implements api.Handler.
-func (*Controller) OpToken(
+func (ctl *Controller) OpToken(
 	ctx context.Context,
 	req *api.OPTokenRequestSchema,
 ) (api.OpTokenRes, error) {
 	end := log.StartEnd(ctx)
 	defer end()
 
+	output, err := ctl.op.Token(ctx, usecase.OpenIDProviderTokenInput{
+		Issuer:          ctl.config.SelfEndpoint(),
+		Code:            req.Code,
+		AccessTokenSign: ctl.config.AcessTokenSign(),
+		IDTokenSignKey:  ctl.config.IDTokenSignKey(),
+	})
+	if err != nil {
+		return &api.OpTokenInternalServerError{}, err
+	}
+
 	res := &api.OPTokenResponseSchemaHeaders{
 		CacheControl: api.NewOptString("no-store"),
 		Pragma:       api.NewOptString("no-cache"),
-		Response:     api.OPTokenResponseSchema{},
+		Response: api.OPTokenResponseSchema{
+			AccessToken:  output.AccessToken,
+			TokenType:    output.TokenType,
+			RefreshToken: output.RefreshToken,
+			ExpiresIn:    output.ExpiresIn,
+			IDToken:      output.IDToken,
+		},
 	}
 
 	return res, nil
 }
 
 // OpUserinfo implements api.Handler.
-func (*Controller) OpUserinfo(ctx context.Context) (api.OpUserinfoRes, error) {
-	panic("unimplemented")
+func (ctl *Controller) OpUserinfo(
+	ctx context.Context,
+) (api.OpUserinfoRes, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
+	if _, err := ctl.op.Userinfo(ctx, usecase.OpenIDProviderUserinfoInput{}); err != nil {
+		return &api.OpUserinfoInternalServerError{}, err
+	}
+
+	return &api.OPUserInfoResponseSchema{}, nil
 }
 
 // RpCallback implements api.Handler.
-func (*Controller) RpCallback(
+func (ctl *Controller) RpCallback(
 	ctx context.Context,
 	params api.RpCallbackParams,
 ) (api.RpCallbackRes, error) {
-	panic("unimplemented")
+	end := log.StartEnd(ctx)
+	defer end()
+
+	output, err := ctl.rp.Callback(ctx, usecase.RelyingPartyCallbackInput{
+		Code:         params.Code,
+		OIDCEndpoint: ctl.config.SelfEndpoint(),
+	})
+	if err != nil {
+		return &api.RpCallbackInternalServerError{}, err
+	}
+
+	return &api.RpCallbackOK{
+		Data: output.Data,
+	}, nil
 }
 
 // RpLogin implements api.Handler.
@@ -259,7 +301,7 @@ func (ctl *Controller) RpLogin(
 
 	output, err := ctl.rp.Login(ctx, usecase.RelyingPartyLoginInput{
 		OIDCEndpoint: fmt.Sprintf("%s/authorize", ctl.config.OIDCEndpoint()),
-		ClientID:     "test",
+		ClientID:     ctl.config.RelyingPartyID(),
 		RedirectURI:  fmt.Sprintf("%s/rp/callback", ctl.config.SelfEndpoint()),
 		Scope:        []string{string(api.OpAuthorizeScopeItemOpenid)},
 	})

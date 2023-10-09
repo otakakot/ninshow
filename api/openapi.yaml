@@ -282,7 +282,7 @@ paths:
       description: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
       operationId: opUserinfo
       security:
-        - Bearer: []      
+        - Bearer: []
       responses:
         '200':
           description: OK
@@ -385,6 +385,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            text/html:
+              schema:
+                type: string
         '500':
           description: Internal Server Error
 components:

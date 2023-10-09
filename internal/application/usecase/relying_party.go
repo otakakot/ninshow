@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -23,6 +24,11 @@ type RelyingPartyLoginOutput struct {
 	RedirectURI url.URL
 }
 
-type RelyingPartyCallbackInput struct{}
+type RelyingPartyCallbackInput struct {
+	Code         string
+	OIDCEndpoint string
+}
 
-type RelyingPartyCallbackOutput struct{}
+type RelyingPartyCallbackOutput struct {
+	Data io.Reader
+}

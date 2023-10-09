@@ -1115,8 +1115,19 @@ type RpCallbackInternalServerError struct{}
 
 func (*RpCallbackInternalServerError) rpCallbackRes() {}
 
-// RpCallbackOK is response for RpCallback operation.
-type RpCallbackOK struct{}
+type RpCallbackOK struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s RpCallbackOK) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
 
 func (*RpCallbackOK) rpCallbackRes() {}
 
