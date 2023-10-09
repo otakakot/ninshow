@@ -12,13 +12,14 @@ import (
 
 // ref. https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
 type IDToken struct {
-	Iss   string `json:"iss"`
-	Sub   string `json:"sub"`
-	Aud   string `json:"aud"`
-	Nonce string `json:"nonce"`
-	Exp   int64  `json:"exp"`
-	Iat   int64  `json:"iat"`
-	Name  string `json:"name"`
+	Iss     string  `json:"iss"`
+	Sub     string  `json:"sub"`
+	Aud     string  `json:"aud"`
+	Nonce   string  `json:"nonce"`
+	Exp     int64   `json:"exp"`
+	Iat     int64   `json:"iat"`
+	Profile *string `json:"profile"`
+	Email   *string `json:"email"`
 }
 
 func GenerateIDToken(
@@ -26,19 +27,29 @@ func GenerateIDToken(
 	sub string,
 	aud string,
 	nonce string,
-	name string,
+	profile *string,
+	email *string,
 ) IDToken {
 	now := time.Now()
 
-	return IDToken{
+	idt := IDToken{
 		Iss:   iss,
 		Sub:   sub,
 		Aud:   aud,
 		Nonce: nonce,
 		Exp:   now.Add(time.Hour).Unix(),
 		Iat:   now.Unix(),
-		Name:  name,
 	}
+
+	if profile != nil {
+		idt.Profile = profile
+	}
+
+	if email != nil {
+		idt.Email = email
+	}
+
+	return idt
 }
 
 func (it IDToken) JWT(
@@ -51,7 +62,14 @@ func (it IDToken) JWT(
 		"exp":   it.Exp,
 		"iat":   it.Iat,
 		"nonce": it.Nonce,
-		"name":  it.Name,
+	}
+
+	if it.Profile != nil {
+		claims["profile"] = it.Profile
+	}
+
+	if it.Email != nil {
+		claims["email"] = it.Email
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -71,7 +89,14 @@ func (it IDToken) RSA256(
 		"exp":   it.Exp,
 		"iat":   it.Iat,
 		"nonce": it.Nonce,
-		"name":  it.Name,
+	}
+
+	if it.Profile != nil {
+		claims["profile"] = it.Profile
+	}
+
+	if it.Email != nil {
+		claims["email"] = it.Email
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -96,15 +121,24 @@ func ParseIDToken(
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return IDToken{
+		idt := IDToken{
 			Iss:   claims["iss"].(string),
 			Sub:   claims["sub"].(string),
 			Exp:   claims["exp"].(int64),
 			Iat:   claims["iat"].(int64),
 			Aud:   claims["aud"].(string),
 			Nonce: claims["nonce"].(string),
-			Name:  claims["name"].(string),
-		}, nil
+		}
+
+		if profile, ok := claims["profile"].(string); ok {
+			idt.Profile = &profile
+		}
+
+		if email, ok := claims["email"].(string); ok {
+			idt.Email = &email
+		}
+
+		return idt, nil
 	} else {
 		return IDToken{}, err
 	}

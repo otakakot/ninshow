@@ -5,6 +5,8 @@ import (
 	"crypto/rsa"
 	"io"
 	"net/url"
+
+	"github.com/otakakot/ninshow/internal/domain/model"
 )
 
 type OpenIDProviider interface {
@@ -84,6 +86,12 @@ type OpenIDProviderTokenOutput struct {
 	ExpiresIn    int
 }
 
-type OpenIDProviderUserinfoInput struct{}
+type OpenIDProviderUserinfoInput struct {
+	AccessToken model.AccessToken
+}
 
-type OpenIDProviderUserinfoOutput struct{}
+type OpenIDProviderUserinfoOutput struct {
+	Sub     string
+	Profile *string
+	Email   *string
+}

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,14 +11,14 @@ import (
 // ref. https://qiita.com/TakahikoKawasaki/items/970548727761f9e02bcd
 
 type AccessToken struct {
-	Iss      string `json:"iss"`
-	Sub      string `json:"sub"`
-	Exp      int64  `json:"exp"`
-	Iat      int64  `json:"iat"`
-	Aud      string `json:"aud"`
-	Jti      string `json:"jti"`
-	Scope    string `json:"scope"`
-	ClientID string `json:"client_id"`
+	Iss      string   `json:"iss"`
+	Sub      string   `json:"sub"`
+	Exp      int64    `json:"exp"`
+	Iat      int64    `json:"iat"`
+	Aud      string   `json:"aud"`
+	Jti      string   `json:"jti"`
+	Scope    []string `json:"scope"`
+	ClientID string   `json:"client_id"`
 }
 
 func GenerateAccessToken(
@@ -25,7 +26,7 @@ func GenerateAccessToken(
 	sub string,
 	aud string,
 	jti string,
-	scope string,
+	scope []string,
 	clientID string,
 ) AccessToken {
 	now := time.Now()
@@ -76,17 +77,45 @@ func ParseAccessToken(
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		sc := claims["scope"].([]interface{})
+		scope := make([]string, len(sc))
+		for i, v := range sc {
+			scope[i] = v.(string)
+		}
+
 		return AccessToken{
 			Iss:      claims["iss"].(string),
 			Sub:      claims["sub"].(string),
 			ClientID: claims["client_id"].(string),
 			Exp:      int64(claims["exp"].(float64)),
 			Iat:      int64(claims["iat"].(float64)),
-			Scope:    claims["scope"].(string),
+			Scope:    scope,
 			Aud:      claims["aud"].(string),
 			Jti:      claims["jti"].(string),
 		}, nil
 	} else {
 		return AccessToken{}, err
 	}
+}
+
+type key struct{}
+
+func SetAccessTokenCtx(
+	ctx context.Context,
+	val AccessToken,
+) context.Context {
+	return context.WithValue(ctx, key{}, val)
+}
+
+func GetAccessTokenCtx(
+	ctx context.Context,
+) AccessToken {
+	v := ctx.Value(key{})
+
+	vv, ok := v.(AccessToken)
+	if !ok {
+		return AccessToken{}
+	}
+
+	return vv
 }

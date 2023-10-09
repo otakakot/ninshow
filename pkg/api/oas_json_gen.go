@@ -902,14 +902,23 @@ func (s *OPUserInfoResponseSchema) encodeFields(e *jx.Encoder) {
 		e.Str(s.Sub)
 	}
 	{
-		e.FieldStart("name")
-		e.Str(s.Name)
+		if s.Profile.Set {
+			e.FieldStart("profile")
+			s.Profile.Encode(e)
+		}
+	}
+	{
+		if s.Email.Set {
+			e.FieldStart("email")
+			s.Email.Encode(e)
+		}
 	}
 }
 
-var jsonFieldsNameOfOPUserInfoResponseSchema = [2]string{
+var jsonFieldsNameOfOPUserInfoResponseSchema = [3]string{
 	0: "sub",
-	1: "name",
+	1: "profile",
+	2: "email",
 }
 
 // Decode decodes OPUserInfoResponseSchema from json.
@@ -933,17 +942,25 @@ func (s *OPUserInfoResponseSchema) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"sub\"")
 			}
-		case "name":
-			requiredBitSet[0] |= 1 << 1
+		case "profile":
 			if err := func() error {
-				v, err := d.Str()
-				s.Name = string(v)
-				if err != nil {
+				s.Profile.Reset()
+				if err := s.Profile.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"name\"")
+				return errors.Wrap(err, "decode field \"profile\"")
+			}
+		case "email":
+			if err := func() error {
+				s.Email.Reset()
+				if err := s.Email.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"email\"")
 			}
 		default:
 			return d.Skip()
@@ -955,7 +972,7 @@ func (s *OPUserInfoResponseSchema) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000011,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

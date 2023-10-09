@@ -13,13 +13,15 @@ import (
 var _ repository.Account = (*Account)(nil)
 
 type Account struct {
-	mu       sync.Mutex
-	accounts map[string]model.Account
+	mu        sync.Mutex
+	accounts  map[string]model.Account
+	usernames map[string]model.Account
 }
 
 func NewAcccount() *Account {
 	return &Account{
-		accounts: make(map[string]model.Account),
+		accounts:  make(map[string]model.Account),
+		usernames: make(map[string]model.Account),
 	}
 }
 
@@ -35,7 +37,13 @@ func (ac *Account) Save(
 		return fmt.Errorf("account already exists")
 	}
 
-	ac.accounts[account.Username] = account
+	if _, ok := ac.usernames[account.Username]; ok {
+		return fmt.Errorf("account already exists")
+	}
+
+	ac.accounts[account.ID] = account
+
+	ac.usernames[account.Username] = account
 
 	return nil
 }
@@ -43,12 +51,28 @@ func (ac *Account) Save(
 // Find implements repository.Account.
 func (ac *Account) Find(
 	_ context.Context,
+	id string,
+) (*model.Account, error) {
+	ac.mu.Lock()
+	defer ac.mu.Unlock()
+
+	account, ok := ac.accounts[id]
+	if !ok {
+		return nil, fmt.Errorf("account not found")
+	}
+
+	return &account, nil
+}
+
+// FindByUsername implements repository.Account.
+func (ac *Account) FindByUsername(
+	_ context.Context,
 	username string,
 ) (*model.Account, error) {
 	ac.mu.Lock()
 	defer ac.mu.Unlock()
 
-	account, ok := ac.accounts[username]
+	account, ok := ac.usernames[username]
 	if !ok {
 		return nil, fmt.Errorf("account not found")
 	}

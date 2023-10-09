@@ -554,13 +554,16 @@ components:
           type: string
           description: sub
           example: sub
-        name:
+        profile:
           type: string
-          description: name
-          example: name
+          description: profile
+          example: profile
+        email:
+          type: string
+          description: email
+          example: email
       required:
         - sub
-        - name
     OPRevokeRequestSchema:
       type: object
       description: https://openid-foundation-japan.github.io/rfc7009.ja.html#anchor2

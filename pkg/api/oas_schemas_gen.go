@@ -621,8 +621,10 @@ func (*OPTokenResponseSchemaHeaders) opTokenRes() {}
 type OPUserInfoResponseSchema struct {
 	// Sub.
 	Sub string `json:"sub"`
-	// Name.
-	Name string `json:"name"`
+	// Profile.
+	Profile OptString `json:"profile"`
+	// Email.
+	Email OptString `json:"email"`
 }
 
 // GetSub returns the value of Sub.
@@ -630,9 +632,14 @@ func (s *OPUserInfoResponseSchema) GetSub() string {
 	return s.Sub
 }
 
-// GetName returns the value of Name.
-func (s *OPUserInfoResponseSchema) GetName() string {
-	return s.Name
+// GetProfile returns the value of Profile.
+func (s *OPUserInfoResponseSchema) GetProfile() OptString {
+	return s.Profile
+}
+
+// GetEmail returns the value of Email.
+func (s *OPUserInfoResponseSchema) GetEmail() OptString {
+	return s.Email
 }
 
 // SetSub sets the value of Sub.
@@ -640,9 +647,14 @@ func (s *OPUserInfoResponseSchema) SetSub(val string) {
 	s.Sub = val
 }
 
-// SetName sets the value of Name.
-func (s *OPUserInfoResponseSchema) SetName(val string) {
-	s.Name = val
+// SetProfile sets the value of Profile.
+func (s *OPUserInfoResponseSchema) SetProfile(val OptString) {
+	s.Profile = val
+}
+
+// SetEmail sets the value of Email.
+func (s *OPUserInfoResponseSchema) SetEmail(val OptString) {
+	s.Email = val
 }
 
 func (*OPUserInfoResponseSchema) opUserinfoRes() {}

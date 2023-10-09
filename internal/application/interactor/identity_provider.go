@@ -56,7 +56,7 @@ func (idp *IdentityProvider) Signin(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	account, err := idp.account.Find(ctx, input.Username)
+	account, err := idp.account.FindByUsername(ctx, input.Username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find account: %w", err)
 	}

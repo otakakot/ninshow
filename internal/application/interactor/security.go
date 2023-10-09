@@ -2,6 +2,7 @@ package interactor
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
 	"github.com/otakakot/ninshow/internal/domain/model"
@@ -28,16 +29,17 @@ func (sec *Security) HandleBearer(
 	input usecase.HandleBearerInput,
 ) (*usecase.HandleBearerOutput, error) {
 	// Access Token が有効か確認する
-	if _, err := model.ParseAccessToken(input.Token, input.Sign); err != nil {
-		return nil, err
+	at, err := model.ParseAccessToken(input.Token, input.Sign)
+	if err != nil {
+		return nil, fmt.Errorf("invalid access token: %w", err)
 	}
 
 	// Access Token が Cache に存在するか確認する
 	if _, err := sec.cache.Get(ctx, input.Token); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid access token: %w", err)
 	}
 
-	// TODO: context に必要な値を保存する
+	ctx = model.SetAccessTokenCtx(ctx, at)
 
 	return &usecase.HandleBearerOutput{
 		Ctx: ctx,

@@ -12,13 +12,16 @@ import (
 var _ api.SecurityHandler = (*Security)(nil)
 
 type Security struct {
+	config   Config
 	security usecase.Security
 }
 
 func NewSecurity(
+	config Config,
 	security usecase.Security,
 ) *Security {
 	return &Security{
+		config:   config,
 		security: security,
 	}
 }
@@ -36,6 +39,7 @@ func (sec *Security) HandleBearer(
 
 	output, err := sec.security.HandleBearer(ctx, usecase.HandleBearerInput{
 		Token: t.Token,
+		Sign:  sec.config.AcessTokenSign(),
 	})
 	if err != nil {
 		return ctx, err

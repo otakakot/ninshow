@@ -13,6 +13,7 @@ import (
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
 	"github.com/otakakot/ninshow/pkg/log"
+	"golang.org/x/exp/slices"
 )
 
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
@@ -89,7 +90,9 @@ func (op *OpenIDProvider) Autorize(
 	if err := op.param.Set(ctx, id, model.AuthorizeParam{
 		RedirectURI: input.RedirectURI,
 		State:       input.State,
+		Scope:       input.Scope,
 		ClientID:    input.ClientID,
+		Nonce:       input.Nonce,
 	}, time.Second); err != nil {
 		return nil, fmt.Errorf("failed to set cache: %w", err)
 	}
@@ -175,7 +178,7 @@ func (op *OpenIDProvider) Login(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	account, err := op.account.Find(ctx, input.Username)
+	account, err := op.account.FindByUsername(ctx, input.Username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find account: %w", err)
 	}
@@ -261,12 +264,17 @@ func (op *OpenIDProvider) Token(
 		return nil, fmt.Errorf("failed to get param cache: %w", err)
 	}
 
+	account, err := op.account.Find(ctx, loggedin.AccountID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find account: %w", err)
+	}
+
 	at := model.GenerateAccessToken(
 		input.Issuer,
 		loggedin.AccountID,
 		param.ClientID,
 		"jti",
-		"scope",
+		param.Scope,
 		param.ClientID,
 	).JWT(input.AccessTokenSign)
 
@@ -280,12 +288,26 @@ func (op *OpenIDProvider) Token(
 		return nil, fmt.Errorf("failed to set cache: %w", err)
 	}
 
+	var (
+		profile *string
+		email   *string
+	)
+
+	if slices.Contains(param.Scope, "profile") {
+		profile = &account.Username
+	}
+
+	if slices.Contains(param.Scope, "email") {
+		email = &account.Email
+	}
+
 	it := model.GenerateIDToken(
 		input.Issuer,
 		loggedin.AccountID,
 		param.ClientID,
 		param.Nonce,
-		"name",
+		profile,
+		email,
 	).RSA256(input.IDTokenSignKey)
 
 	return &usecase.OpenIDProviderTokenOutput{
@@ -298,10 +320,26 @@ func (op *OpenIDProvider) Token(
 }
 
 // Userinfo implements usecase.OpenIDProviider.
-func (*OpenIDProvider) Userinfo(
+func (op *OpenIDProvider) Userinfo(
 	ctx context.Context,
 	input usecase.OpenIDProviderUserinfoInput,
 ) (*usecase.OpenIDProviderUserinfoOutput, error) {
-	// TODO: Access Token のスコープに応じてユーザー情報を返す
-	return &usecase.OpenIDProviderUserinfoOutput{}, nil
+	account, err := op.account.Find(ctx, input.AccessToken.Sub)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find account: %w", err)
+	}
+
+	output := &usecase.OpenIDProviderUserinfoOutput{
+		Sub: account.ID,
+	}
+
+	if slices.Contains(input.AccessToken.Scope, "profile") {
+		output.Profile = &account.Username
+	}
+
+	if slices.Contains(input.AccessToken.Scope, "email") {
+		output.Email = &account.Email
+	}
+
+	return output, nil
 }

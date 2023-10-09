@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
+	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/pkg/api"
 	"github.com/otakakot/ninshow/pkg/log"
 )
@@ -264,11 +265,28 @@ func (ctl *Controller) OpUserinfo(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	if _, err := ctl.op.Userinfo(ctx, usecase.OpenIDProviderUserinfoInput{}); err != nil {
+	at := model.GetAccessTokenCtx(ctx)
+
+	output, err := ctl.op.Userinfo(ctx, usecase.OpenIDProviderUserinfoInput{
+		AccessToken: at,
+	})
+	if err != nil {
 		return &api.OpUserinfoInternalServerError{}, err
 	}
 
-	return &api.OPUserInfoResponseSchema{}, nil
+	res := &api.OPUserInfoResponseSchema{
+		Sub: output.Sub,
+	}
+
+	if output.Profile != nil {
+		res.Profile = api.NewOptString(*output.Profile)
+	}
+
+	if output.Email != nil {
+		res.Email = api.NewOptString(*output.Email)
+	}
+
+	return res, nil
 }
 
 // RpCallback implements api.Handler.
@@ -303,7 +321,7 @@ func (ctl *Controller) RpLogin(
 		OIDCEndpoint: fmt.Sprintf("%s/authorize", ctl.config.OIDCEndpoint()),
 		ClientID:     ctl.config.RelyingPartyID(),
 		RedirectURI:  fmt.Sprintf("%s/rp/callback", ctl.config.SelfEndpoint()),
-		Scope:        []string{string(api.OpAuthorizeScopeItemOpenid)},
+		Scope:        []string{string(api.OpAuthorizeScopeItemOpenid), string(api.OpAuthorizeScopeItemProfile), string(api.OpAuthorizeScopeItemEmail)},
 	})
 	if err != nil {
 		return &api.RpLoginInternalServerError{}, err

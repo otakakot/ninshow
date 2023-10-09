@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -50,12 +49,15 @@ func (*RelyingParty) Login(
 	}
 
 	values := url.Values{
-		"response_type": {"code"},                         // Authorization Flow なので code を指定
-		"client_id":     {input.ClientID},                 // RPを識別するためのID OPに登録しておく必要がある
-		"redirect_uri":  {input.RedirectURI},              // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
-		"scope":         {strings.Join(input.Scope, " ")}, // RPが要求するスコープ OPに登録しておく必要がある
-		"state":         {state},                          // CSRF対策のためのstate
-		"nonce":         {uuid.NewString()},               // CSRF対策のためのnonce
+		"response_type": {"code"},            // Authorization Flow なので code を指定
+		"client_id":     {input.ClientID},    // RPを識別するためのID OPに登録しておく必要がある
+		"redirect_uri":  {input.RedirectURI}, // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
+		"state":         {state},             // CSRF対策のためのstate
+		"nonce":         {uuid.NewString()},  // CSRF対策のためのnonce
+	}
+
+	for _, s := range input.Scope {
+		values.Add("scope", s) // RPが要求するスコープ OPに登録しておく必要がある
 	}
 
 	buf.WriteByte('?')
@@ -98,7 +100,25 @@ func (*RelyingParty) Callback(
 		return nil, fmt.Errorf("failed to assert response: %T", v)
 	}
 
-	slog.InfoContext(ctx, fmt.Sprintf("%+v", v))
+	// TODO: ID Token を検証する
+
+	// Accsess Token を利用し OpenID Provider へ UserInfo Request を送信する
+	cl, err := api.NewClient(input.OIDCEndpoint, &security{token: v.Response.AccessToken})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create client: %w", err)
+	}
+
+	rs, err := cl.OpUserinfo(ctx)
+	if err != nil {
+		slog.Warn(fmt.Sprintf("failed to request userinfo: %v", err))
+
+		return nil, fmt.Errorf("failed to request userinfo: %w", err)
+	}
+
+	vv, ok := rs.(*api.OPUserInfoResponseSchema)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert response: %T", vv)
+	}
 
 	const tmp = `<!DOCTYPE html>
 	<html>
@@ -121,6 +141,8 @@ func (*RelyingParty) Callback(
 			<p class="token">{{.RefreshToken}}</p>
 			<h2>id token</h2>
 			<p class="token">{{.IDToken}}</p>
+			<h2>sub</h2>
+			<p>{{.Sub}}</p>
 		</body>
 	</html>
 	`
@@ -132,13 +154,13 @@ func (*RelyingParty) Callback(
 		AccessToken  string
 		RefreshToken string
 		IDToken      string
-		Error        string
+		Sub          string
 	}{
 		TokenType:    v.Response.TokenType,
 		AccessToken:  v.Response.AccessToken,
 		RefreshToken: v.Response.RefreshToken,
 		IDToken:      v.Response.IDToken,
-		Error:        "",
+		Sub:          vv.Sub,
 	}
 
 	buf := new(bytes.Buffer)
@@ -147,11 +169,18 @@ func (*RelyingParty) Callback(
 		return nil, fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	// ID Token を検証する
-
-	// Accsess Token を利用し OpenID Provider へ UserInfo Request を送信する
-
 	return &usecase.RelyingPartyCallbackOutput{
 		Data: buf,
 	}, nil
+}
+
+var _ api.SecuritySource = (*security)(nil)
+
+type security struct {
+	token string
+}
+
+// Bearer implements api.SecuritySource.
+func (sec *security) Bearer(ctx context.Context, operationName string) (api.Bearer, error) {
+	return api.Bearer{Token: sec.token}, nil
 }
