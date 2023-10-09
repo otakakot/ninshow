@@ -359,7 +359,14 @@ func (ctl *Controller) OpRevoke(ctx context.Context, req *api.OPRevokeRequestSch
 	end := log.StartEnd(ctx)
 	defer end()
 
-	panic("unimplemented")
+	if _, err := ctl.op.Revoke(ctx, usecase.OpenIDProviderRevokeInput{
+		Hint:  string(req.TokenTypeHint.Value),
+		Token: req.Token,
+	}); err != nil {
+		return &api.OpRevokeInternalServerError{}, err
+	}
+
+	return &api.OpRevokeOK{}, nil
 }
 
 // RpCallback implements api.Handler.
