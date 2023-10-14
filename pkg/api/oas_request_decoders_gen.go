@@ -3,7 +3,6 @@
 package api
 
 import (
-	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -604,51 +603,27 @@ func (s *Server) decodeOpTokenRequest(r *http.Request) (
 			}
 			if err := q.HasParam(cfg); err == nil {
 				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-					return d.DecodeArray(func(d uri.Decoder) error {
-						var requestDotScopeVal OPTokenRequestSchemaScopeItem
-						if err := func() error {
-							val, err := d.DecodeValue()
-							if err != nil {
-								return err
-							}
-
-							c, err := conv.ToString(val)
-							if err != nil {
-								return err
-							}
-
-							requestDotScopeVal = OPTokenRequestSchemaScopeItem(c)
-							return nil
-						}(); err != nil {
+					var requestDotScopeVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
 							return err
 						}
-						request.Scope = append(request.Scope, requestDotScopeVal)
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotScopeVal = c
 						return nil
-					})
+					}(); err != nil {
+						return err
+					}
+					request.Scope.SetTo(requestDotScopeVal)
+					return nil
 				}); err != nil {
 					return req, close, errors.Wrap(err, "decode \"scope\"")
-				}
-				if err := func() error {
-					var failures []validate.FieldError
-					for i, elem := range request.Scope {
-						if err := func() error {
-							if err := elem.Validate(); err != nil {
-								return err
-							}
-							return nil
-						}(); err != nil {
-							failures = append(failures, validate.FieldError{
-								Name:  fmt.Sprintf("[%d]", i),
-								Error: err,
-							})
-						}
-					}
-					if len(failures) > 0 {
-						return &validate.Error{Fields: failures}
-					}
-					return nil
-				}(); err != nil {
-					return req, close, errors.Wrap(err, "validate")
 				}
 			}
 		}

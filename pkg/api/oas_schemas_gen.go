@@ -420,8 +420,8 @@ type OPTokenRequestSchema struct {
 	// Refresh_token.
 	RefreshToken OptString `json:"refresh_token"`
 	// Client_id.
-	ClientID OptString                       `json:"client_id"`
-	Scope    []OPTokenRequestSchemaScopeItem `json:"scope"`
+	ClientID OptString `json:"client_id"`
+	Scope    OptString `json:"scope"`
 }
 
 // GetGrantType returns the value of GrantType.
@@ -450,7 +450,7 @@ func (s *OPTokenRequestSchema) GetClientID() OptString {
 }
 
 // GetScope returns the value of Scope.
-func (s *OPTokenRequestSchema) GetScope() []OPTokenRequestSchemaScopeItem {
+func (s *OPTokenRequestSchema) GetScope() OptString {
 	return s.Scope
 }
 
@@ -480,7 +480,7 @@ func (s *OPTokenRequestSchema) SetClientID(val OptString) {
 }
 
 // SetScope sets the value of Scope.
-func (s *OPTokenRequestSchema) SetScope(val []OPTokenRequestSchemaScopeItem) {
+func (s *OPTokenRequestSchema) SetScope(val OptString) {
 	s.Scope = val
 }
 
@@ -520,54 +520,6 @@ func (s *OPTokenRequestSchemaGrantType) UnmarshalText(data []byte) error {
 		return nil
 	case OPTokenRequestSchemaGrantTypeRefreshToken:
 		*s = OPTokenRequestSchemaGrantTypeRefreshToken
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-type OPTokenRequestSchemaScopeItem string
-
-const (
-	OPTokenRequestSchemaScopeItemOpenid  OPTokenRequestSchemaScopeItem = "openid"
-	OPTokenRequestSchemaScopeItemProfile OPTokenRequestSchemaScopeItem = "profile"
-	OPTokenRequestSchemaScopeItemEmail   OPTokenRequestSchemaScopeItem = "email"
-)
-
-// AllValues returns all OPTokenRequestSchemaScopeItem values.
-func (OPTokenRequestSchemaScopeItem) AllValues() []OPTokenRequestSchemaScopeItem {
-	return []OPTokenRequestSchemaScopeItem{
-		OPTokenRequestSchemaScopeItemOpenid,
-		OPTokenRequestSchemaScopeItemProfile,
-		OPTokenRequestSchemaScopeItemEmail,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s OPTokenRequestSchemaScopeItem) MarshalText() ([]byte, error) {
-	switch s {
-	case OPTokenRequestSchemaScopeItemOpenid:
-		return []byte(s), nil
-	case OPTokenRequestSchemaScopeItemProfile:
-		return []byte(s), nil
-	case OPTokenRequestSchemaScopeItemEmail:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *OPTokenRequestSchemaScopeItem) UnmarshalText(data []byte) error {
-	switch OPTokenRequestSchemaScopeItem(data) {
-	case OPTokenRequestSchemaScopeItemOpenid:
-		*s = OPTokenRequestSchemaScopeItemOpenid
-		return nil
-	case OPTokenRequestSchemaScopeItemProfile:
-		*s = OPTokenRequestSchemaScopeItemProfile
-		return nil
-	case OPTokenRequestSchemaScopeItemEmail:
-		*s = OPTokenRequestSchemaScopeItemEmail
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -831,54 +783,6 @@ func (s *OpAuthorizeResponseType) UnmarshalText(data []byte) error {
 	switch OpAuthorizeResponseType(data) {
 	case OpAuthorizeResponseTypeCode:
 		*s = OpAuthorizeResponseTypeCode
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-type OpAuthorizeScopeItem string
-
-const (
-	OpAuthorizeScopeItemOpenid  OpAuthorizeScopeItem = "openid"
-	OpAuthorizeScopeItemProfile OpAuthorizeScopeItem = "profile"
-	OpAuthorizeScopeItemEmail   OpAuthorizeScopeItem = "email"
-)
-
-// AllValues returns all OpAuthorizeScopeItem values.
-func (OpAuthorizeScopeItem) AllValues() []OpAuthorizeScopeItem {
-	return []OpAuthorizeScopeItem{
-		OpAuthorizeScopeItemOpenid,
-		OpAuthorizeScopeItemProfile,
-		OpAuthorizeScopeItemEmail,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s OpAuthorizeScopeItem) MarshalText() ([]byte, error) {
-	switch s {
-	case OpAuthorizeScopeItemOpenid:
-		return []byte(s), nil
-	case OpAuthorizeScopeItemProfile:
-		return []byte(s), nil
-	case OpAuthorizeScopeItemEmail:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *OpAuthorizeScopeItem) UnmarshalText(data []byte) error {
-	switch OpAuthorizeScopeItem(data) {
-	case OpAuthorizeScopeItemOpenid:
-		*s = OpAuthorizeScopeItemOpenid
-		return nil
-	case OpAuthorizeScopeItemProfile:
-		*s = OpAuthorizeScopeItemProfile
-		return nil
-	case OpAuthorizeScopeItemEmail:
-		*s = OpAuthorizeScopeItemEmail
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

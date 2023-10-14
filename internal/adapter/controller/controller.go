@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
 	"github.com/otakakot/ninshow/internal/domain/model"
@@ -260,9 +261,9 @@ func (ctl *Controller) OpToken(
 			return &api.OpTokenInternalServerError{}, err
 		}
 
-		scope := make([]api.OPTokenResponseSchemaScopeItem, len(output.Scope))
-		for i, v := range req.Scope {
-			scope[i] = api.OPTokenResponseSchemaScopeItem(v)
+		scope := make([]api.OPTokenResponseSchemaScopeItem, 3)
+		for _, v := range strings.Split(req.Scope.Value, " ") {
+			scope = append(scope, api.OPTokenResponseSchemaScopeItem(v))
 		}
 
 		res := &api.OPTokenResponseSchemaHeaders{
@@ -280,11 +281,7 @@ func (ctl *Controller) OpToken(
 
 		return res, nil
 	case api.OPTokenRequestSchemaGrantTypeRefreshToken:
-		scope := make([]string, len(req.Scope))
-		for i, v := range req.Scope {
-			scope[i] = string(v)
-		}
-
+		scope := append(make([]string, 0, 3), strings.Split(req.Scope.Value, " ")...)
 		output, err := ctl.op.RefreshTkenGrant(ctx, usecase.OpenIDProviderRefreshTokenGrantInput{
 			RefreshToken:    req.RefreshToken.Value,
 			ClientID:        req.ClientID.Value,
@@ -402,7 +399,7 @@ func (ctl *Controller) RpLogin(
 		OIDCEndpoint: fmt.Sprintf("%s/authorize", ctl.config.OIDCEndpoint()),
 		ClientID:     ctl.config.RelyingPartyID(),
 		RedirectURI:  fmt.Sprintf("%s/rp/callback", ctl.config.SelfEndpoint()),
-		Scope:        []string{string(api.OpAuthorizeScopeItemOpenid), string(api.OpAuthorizeScopeItemProfile), string(api.OpAuthorizeScopeItemEmail)},
+		Scope:        []string{"openid", "profile", "email"},
 	})
 	if err != nil {
 		return &api.RpLoginInternalServerError{}, err

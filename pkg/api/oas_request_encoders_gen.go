@@ -236,16 +236,10 @@ func encodeOpTokenRequest(
 			Explode: true,
 		}
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeArray(func(e uri.Encoder) error {
-				for i, item := range request.Scope {
-					if err := func() error {
-						return e.EncodeValue(conv.StringToString(string(item)))
-					}(); err != nil {
-						return errors.Wrapf(err, "[%d]", i)
-					}
-				}
-				return nil
-			})
+			if val, ok := request.Scope.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
 		}); err != nil {
 			return errors.Wrap(err, "encode query")
 		}

@@ -473,16 +473,7 @@ func (c *Client) sendOpAuthorize(ctx context.Context, params OpAuthorizeParams) 
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeArray(func(e uri.Encoder) error {
-				for i, item := range params.Scope {
-					if err := func() error {
-						return e.EncodeValue(conv.StringToString(string(item)))
-					}(); err != nil {
-						return errors.Wrapf(err, "[%d]", i)
-					}
-				}
-				return nil
-			})
+			return e.EncodeValue(conv.StringToString(params.Scope))
 		}); err != nil {
 			return res, errors.Wrap(err, "encode query")
 		}

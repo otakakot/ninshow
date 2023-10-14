@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -49,15 +50,12 @@ func (*RelyingParty) Login(
 	}
 
 	values := url.Values{
-		"response_type": {"code"},            // Authorization Flow なので code を指定
-		"client_id":     {input.ClientID},    // RPを識別するためのID OPに登録しておく必要がある
-		"redirect_uri":  {input.RedirectURI}, // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
-		"state":         {state},             // CSRF対策のためのstate
-		"nonce":         {uuid.NewString()},  // CSRF対策のためのnonce
-	}
-
-	for _, s := range input.Scope {
-		values.Add("scope", s) // RPが要求するスコープ OPに登録しておく必要がある
+		"response_type": {"code"},                         // Authorization Flow なので code を指定
+		"client_id":     {input.ClientID},                 // RPを識別するためのID OPに登録しておく必要がある
+		"redirect_uri":  {input.RedirectURI},              // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
+		"scope":         {strings.Join(input.Scope, " ")}, // RPが要求するスコープ OPに登録しておく必要がある
+		"state":         {state},                          // CSRF対策のためのstate
+		"nonce":         {uuid.NewString()},               // CSRF対策のためのnonce
 	}
 
 	buf.WriteByte('?')
@@ -106,11 +104,7 @@ func (*RelyingParty) Callback(
 		GrantType:    api.OPTokenRequestSchemaGrantTypeRefreshToken,
 		RefreshToken: api.NewOptString(v.Response.RefreshToken),
 		ClientID:     api.NewOptString(input.ClientID),
-		Scope: []api.OPTokenRequestSchemaScopeItem{
-			api.OPTokenRequestSchemaScopeItemOpenid,
-			api.OPTokenRequestSchemaScopeItemEmail,
-			api.OPTokenRequestSchemaScopeItemProfile,
-		},
+		Scope:        api.NewOptString("openid profile email"),
 	}); err != nil {
 		return nil, fmt.Errorf("failed to request token: %w", err)
 	} else {
