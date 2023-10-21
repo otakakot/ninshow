@@ -5,9 +5,11 @@ import { getServerSession } from "next-auth"
 // Read more at: https://next-auth.js.org/getting-started/typescript#module-augmentation
 declare module "next-auth/jwt" {
   interface JWT {
+    idToken?: string
     /** The user's role. */
     userRole?: "admin"
   }
+  interface Sessin {}
 }
 
 const endpoint = "http://localhost:8080"
@@ -18,23 +20,12 @@ export const config = {
       id: "ninshow",
       name: "NinShow",
       type: "oauth",
+      wellKnown: endpoint + "/op/.well-known/openid-configuration",
       version: "2.0",
-      issuer: endpoint,
-      token: endpoint + "/op/token",
-      userinfo: endpoint + "/op/userinfo",
-      authorization: {
-        url: endpoint + "/op/authorize",
-        params: {
-          redirect_uri: "http://localhost:3000",
-          response_type: "code",
-          scope: "openid profile email",
-        }
-      },
-      jwks_endpoint: endpoint + "/op/certs",
       checks: ["nonce", "state"],
-      async profile(profile, tokens) {
+      async profile(profile) {
         return {
-          id: profile.id,
+          id: profile.sub,
           name: profile.name,
           email: profile.email,
         }
@@ -49,9 +40,21 @@ export const config = {
     },
   ],
   callbacks: {
-    async jwt({ token }) {
+    async jwt({ token, account, profile }) {
       token.userRole = "admin"
+      token.idToken = account?.id_token
+      token.name = profile?.name
+      token.email = profile?.email
       return token
+    },
+    async session({ session, token }) {   
+      return {
+        ...session,
+        user: {
+          name: token.name,
+          email: token.email,
+        }
+      }
     },
   },
 } satisfies NextAuthConfig

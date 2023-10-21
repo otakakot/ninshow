@@ -29,7 +29,7 @@ type OpenIDProviderConfigurationOutput struct {
 	AuthorizationEndpoint url.URL
 	TokenEndpoint         url.URL
 	UserinfoEndpoint      url.URL
-	JwksURL               url.URL
+	JwksURI               url.URL
 	RevocationEndpoint    url.URL
 }
 

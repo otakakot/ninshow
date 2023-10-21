@@ -569,8 +569,8 @@ func (s *OPOpenIDConfigurationResponseSchema) encodeFields(e *jx.Encoder) {
 		json.EncodeURI(e, s.UserinfoEndpoint)
 	}
 	{
-		e.FieldStart("jwks_url")
-		json.EncodeURI(e, s.JwksURL)
+		e.FieldStart("jwks_uri")
+		json.EncodeURI(e, s.JwksURI)
 	}
 	{
 		e.FieldStart("revocation_endpoint")
@@ -583,7 +583,7 @@ var jsonFieldsNameOfOPOpenIDConfigurationResponseSchema = [6]string{
 	1: "authorization_endpoint",
 	2: "token_endpoint",
 	3: "userinfo_endpoint",
-	4: "jwks_url",
+	4: "jwks_uri",
 	5: "revocation_endpoint",
 }
 
@@ -644,17 +644,17 @@ func (s *OPOpenIDConfigurationResponseSchema) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"userinfo_endpoint\"")
 			}
-		case "jwks_url":
+		case "jwks_uri":
 			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := json.DecodeURI(d)
-				s.JwksURL = v
+				s.JwksURI = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"jwks_url\"")
+				return errors.Wrap(err, "decode field \"jwks_uri\"")
 			}
 		case "revocation_endpoint":
 			requiredBitSet[0] |= 1 << 5

@@ -61,7 +61,7 @@ func (*OpenIDProvider) Configuration(
 
 	userinfo, _ := url.Parse(fmt.Sprintf("%s/op/userinfo", endpoint))
 
-	jwks, _ := url.Parse(fmt.Sprintf("%s/op/jwks", endpoint))
+	jwks, _ := url.Parse(fmt.Sprintf("%s/op/certs", endpoint))
 
 	revocation, _ := url.Parse(fmt.Sprintf("%s/op/revoke", endpoint))
 
@@ -70,7 +70,7 @@ func (*OpenIDProvider) Configuration(
 		AuthorizationEndpoint: *authorization,
 		TokenEndpoint:         *token,
 		UserinfoEndpoint:      *userinfo,
-		JwksURL:               *jwks,
+		JwksURI:               *jwks,
 		RevocationEndpoint:    *revocation,
 	}, nil
 }

@@ -236,7 +236,7 @@ func (ctl *Controller) OpOpenIDConfiguration(
 		AuthorizationEndpoint: output.AuthorizationEndpoint,
 		TokenEndpoint:         output.TokenEndpoint,
 		UserinfoEndpoint:      output.UserinfoEndpoint,
-		JwksURL:               output.JwksURL,
+		JwksURI:               output.JwksURI,
 		RevocationEndpoint:    output.RevocationEndpoint,
 	}, nil
 }

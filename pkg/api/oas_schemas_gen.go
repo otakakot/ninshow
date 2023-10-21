@@ -271,7 +271,7 @@ type OPOpenIDConfigurationResponseSchema struct {
 	// Http://localhost:8080/op/userinfo.
 	UserinfoEndpoint url.URL `json:"userinfo_endpoint"`
 	// Http://localhost:8080/op/certs.
-	JwksURL url.URL `json:"jwks_url"`
+	JwksURI url.URL `json:"jwks_uri"`
 	// Http://localhost:8080/op/revoke.
 	RevocationEndpoint url.URL `json:"revocation_endpoint"`
 }
@@ -296,9 +296,9 @@ func (s *OPOpenIDConfigurationResponseSchema) GetUserinfoEndpoint() url.URL {
 	return s.UserinfoEndpoint
 }
 
-// GetJwksURL returns the value of JwksURL.
-func (s *OPOpenIDConfigurationResponseSchema) GetJwksURL() url.URL {
-	return s.JwksURL
+// GetJwksURI returns the value of JwksURI.
+func (s *OPOpenIDConfigurationResponseSchema) GetJwksURI() url.URL {
+	return s.JwksURI
 }
 
 // GetRevocationEndpoint returns the value of RevocationEndpoint.
@@ -326,9 +326,9 @@ func (s *OPOpenIDConfigurationResponseSchema) SetUserinfoEndpoint(val url.URL) {
 	s.UserinfoEndpoint = val
 }
 
-// SetJwksURL sets the value of JwksURL.
-func (s *OPOpenIDConfigurationResponseSchema) SetJwksURL(val url.URL) {
-	s.JwksURL = val
+// SetJwksURI sets the value of JwksURI.
+func (s *OPOpenIDConfigurationResponseSchema) SetJwksURI(val url.URL) {
+	s.JwksURI = val
 }
 
 // SetRevocationEndpoint sets the value of RevocationEndpoint.

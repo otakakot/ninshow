@@ -451,7 +451,7 @@ components:
           description: http://localhost:8080/op/userinfo
           format: uri
           example: http://localhost:8080/op/userinfo
-        jwks_url:
+        jwks_uri:
           type: string
           description: http://localhost:8080/op/certs
           format: uri
@@ -466,7 +466,7 @@ components:
         - authorization_endpoint
         - token_endpoint
         - userinfo_endpoint
-        - jwks_url
+        - jwks_uri
         - revocation_endpoint
     OPLoginRequestSchema:
       type: object
