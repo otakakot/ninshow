@@ -9,6 +9,7 @@ import (
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/driver/config"
 	"github.com/otakakot/ninshow/internal/driver/middleware"
+	"github.com/otakakot/ninshow/internal/driver/postgres"
 	"github.com/otakakot/ninshow/internal/driver/server"
 	"github.com/otakakot/ninshow/pkg/api"
 )
@@ -16,9 +17,21 @@ import (
 func main() {
 	cfg := config.NewConfig()
 
-	accountRepo := gateway.NewAcccount()
+	ps := postgres.New()
+	defer func() {
+		if err := ps.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
-	acc, _ := model.SingupAccount("test", "test", "test")
+	rdb, err := ps.Of(cfg.DSN)
+	if err != nil {
+		panic(err)
+	}
+
+	accountRepo := gateway.NewAcccount(rdb)
+
+	acc, _ := model.SingupAccount("test", "test@example.com", "test")
 	_ = accountRepo.Save(context.Background(), *acc)
 
 	paramCache := gateway.NewParamCache()

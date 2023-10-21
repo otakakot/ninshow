@@ -102,3 +102,32 @@ ymlfmt: ## format yaml file
 .PHONY: ymlint
 ymlint: ## lint yaml file
 	@yamlfmt -lint
+
+.PHONY: psql
+psql:
+	@docker exec -it ${APP_NAME}-postgres psql -U postgres
+
+.PHONY: prismastudio
+prismastudio: ## execute prisma studio
+	@(cd schema && bun run prisma studio)
+
+.PHONY: prismapush
+prismapush: ## migrate prisma schema
+	@(cd schema && bun run prisma db push)
+
+.PHONY: prismapull
+prismapull: ## import prisma schema
+	@(cd schema && bun run prisma db pull)
+
+.PHONY: atlasinspect
+atlasinspect: ## import atlas schema
+	@atlas schema inspect -u ${DATABASE_URL} > schema/schema.hcl
+
+.PHONY: atlasapply
+atlasapply: ## migrate atlas schema
+	@atlas schema apply -u ${DATABASE_URL} --to file://schema/schema.hcl --auto-approve
+
+.PHONY: schemafmt
+schemafmt: 
+	@atlas schema fmt schema/schema.hcl
+	@(cd schema && bun run prisma format)

@@ -2,6 +2,8 @@ package gateway
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -13,52 +15,52 @@ import (
 var _ repository.Account = (*Account)(nil)
 
 type Account struct {
-	mu        sync.Mutex
-	accounts  map[string]model.Account
-	usernames map[string]model.Account
+	rdb *RDB
 }
 
-func NewAcccount() *Account {
+func NewAcccount(
+	rdb *RDB,
+) *Account {
 	return &Account{
-		accounts:  make(map[string]model.Account),
-		usernames: make(map[string]model.Account),
+		rdb: rdb,
 	}
 }
 
 // Save implements repository.Account.
 func (ac *Account) Save(
-	_ context.Context,
+	ctx context.Context,
 	account model.Account,
 ) error {
-	ac.mu.Lock()
-	defer ac.mu.Unlock()
+	query := `INSERT INTO accounts (id, email, username, password) VALUES ($1, $2, $3, $4)`
 
-	if _, ok := ac.accounts[account.Username]; ok {
-		return fmt.Errorf("account already exists")
+	stmt, err := ac.rdb.Client.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 
-	if _, ok := ac.usernames[account.Username]; ok {
-		return fmt.Errorf("account already exists")
+	if _, err := stmt.ExecContext(ctx, account.ID, account.Email, account.Username, account.HashPass); err != nil {
+		return fmt.Errorf("failed to execute statement: %w", err)
 	}
-
-	ac.accounts[account.ID] = account
-
-	ac.usernames[account.Username] = account
 
 	return nil
 }
 
 // Find implements repository.Account.
 func (ac *Account) Find(
-	_ context.Context,
+	ctx context.Context,
 	id string,
 ) (*model.Account, error) {
-	ac.mu.Lock()
-	defer ac.mu.Unlock()
+	query := `SELECT id, email, username, password FROM accounts WHERE id = $1`
 
-	account, ok := ac.accounts[id]
-	if !ok {
-		return nil, fmt.Errorf("account not found")
+	row := ac.rdb.Client.QueryRowContext(ctx, query, id)
+
+	var account model.Account
+	if err := row.Scan(&account.ID, &account.Email, &account.Username, &account.HashPass); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("account not found")
+		}
+
+		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
 
 	return &account, nil
@@ -66,15 +68,20 @@ func (ac *Account) Find(
 
 // FindByUsername implements repository.Account.
 func (ac *Account) FindByUsername(
-	_ context.Context,
+	ctx context.Context,
 	username string,
 ) (*model.Account, error) {
-	ac.mu.Lock()
-	defer ac.mu.Unlock()
+	query := `SELECT id, email, username, password FROM accounts WHERE username = $1`
 
-	account, ok := ac.usernames[username]
-	if !ok {
-		return nil, fmt.Errorf("account not found")
+	row := ac.rdb.Client.QueryRowContext(ctx, query, username)
+
+	var account model.Account
+	if err := row.Scan(&account.ID, &account.Email, &account.Username, &account.HashPass); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("account not found")
+		}
+
+		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
 
 	return &account, nil

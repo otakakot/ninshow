@@ -12,6 +12,7 @@ import (
 var _ controller.Config = (*Config)(nil)
 
 type Config struct {
+	DSN             string
 	port            string
 	selfEndpoint    string
 	oidcEndpoint    string
@@ -21,6 +22,11 @@ type Config struct {
 }
 
 func NewConfig() *Config {
+	dsn := os.Getenv("DSN")
+	if dsn == "" {
+		panic("DSN is not set")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -46,6 +52,7 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
+		DSN:             dsn,
 		port:            port,
 		selfEndpoint:    self,
 		oidcEndpoint:    oidc,
