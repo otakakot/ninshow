@@ -321,7 +321,8 @@ func (s *Server) handleIdpSignupRequest(args [0]string, argsEscaped bool, w http
 
 // handleOpAuthorizeRequest handles opAuthorize operation.
 //
-// Authentication Request.
+// Authentication Request
+// ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#code-authz-req.
 //
 // GET /op/authorize
 func (s *Server) handleOpAuthorizeRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {

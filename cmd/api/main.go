@@ -31,6 +31,15 @@ func main() {
 
 	accountRepo := gateway.NewAcccount(rdb)
 
+	oidcCliRepo := gateway.NewOIDCClient(rdb)
+
+	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
+		cfg.RelyingPartyID(),
+		"ninshow",
+		cfg.RelyingPartySecret(),
+		"htttp://localhost:3000",
+	))
+
 	acc, _ := model.SingupAccount("test", "test@example.com", "test")
 	_ = accountRepo.Save(context.Background(), *acc)
 
@@ -45,6 +54,7 @@ func main() {
 	idp := interactor.NewIdentityProvider(accountRepo)
 
 	op := interactor.NewOpenIDProvider(
+		oidcCliRepo,
 		accountRepo,
 		paramCache,
 		loggedinCache,
@@ -63,6 +73,7 @@ func main() {
 	hdl, err := api.NewServer(
 		ctr,
 		sec,
+		api.WithMiddleware(middleware.Logging()),
 	)
 	if err != nil {
 		panic(err)

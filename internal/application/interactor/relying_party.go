@@ -84,10 +84,15 @@ func (*RelyingParty) Callback(
 		return nil, fmt.Errorf("failed to create client: %w", err)
 	}
 
+	redirectURI, _ := url.Parse("")
+
 	res, err := cli.OpToken(ctx, &api.OPTokenRequestSchema{
-		GrantType:   api.OPTokenRequestSchemaGrantTypeAuthorizationCode,
-		Code:        input.Code,
-		RedirectURI: url.URL{},
+		GrantType:    api.OPTokenRequestSchemaGrantTypeAuthorizationCode,
+		Code:         input.Code,
+		RedirectURI:  *redirectURI,
+		ClientID:     api.NewOptString(input.ClientID),
+		ClientSecret: api.NewOptString(input.ClientSecret),
+		Scope:        api.NewOptString("openid profile email"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to request token: %w", err)

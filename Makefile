@@ -85,6 +85,9 @@ endef
 .PHONY: up
 up: ## docker compose up with air hot reload
 	@docker compose --project-name ${APP_NAME} --file ./.docker/compose.yaml up -d
+
+.PHONY: web
+web: ## run web server
 	@(cd web && bun run dev)
 
 .PHONY: down
@@ -107,6 +110,10 @@ ymlint: ## lint yaml file
 psql:
 	@docker exec -it ${APP_NAME}-postgres psql -U postgres
 
+.PHONY: migrate
+migrate: ## migrate atlas schema
+	@atlas schema apply -u ${DATABASE_URL} --to file://schema/schema.hcl --auto-approve
+
 .PHONY: prismastudio
 prismastudio: ## execute prisma studio
 	@(cd schema && bun run prisma studio)
@@ -122,10 +129,6 @@ prismapull: ## import prisma schema
 .PHONY: atlasinspect
 atlasinspect: ## import atlas schema
 	@atlas schema inspect -u ${DATABASE_URL} > schema/schema.hcl
-
-.PHONY: atlasapply
-atlasapply: ## migrate atlas schema
-	@atlas schema apply -u ${DATABASE_URL} --to file://schema/schema.hcl --auto-approve
 
 .PHONY: schemafmt
 schemafmt: 

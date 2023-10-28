@@ -12,13 +12,14 @@ import (
 var _ controller.Config = (*Config)(nil)
 
 type Config struct {
-	DSN             string
-	port            string
-	selfEndpoint    string
-	oidcEndpoint    string
-	idTokenSignKey  *rsa.PrivateKey
-	accessTokenSign string
-	relyingPartyID  string
+	DSN                string
+	port               string
+	selfEndpoint       string
+	oidcEndpoint       string
+	idTokenSignKey     *rsa.PrivateKey
+	accessTokenSign    string
+	relyingPartyID     string
+	relyingPartySecret string
 }
 
 func NewConfig() *Config {
@@ -52,13 +53,14 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
-		DSN:             dsn,
-		port:            port,
-		selfEndpoint:    self,
-		oidcEndpoint:    oidc,
-		idTokenSignKey:  key,
-		accessTokenSign: "sign",
-		relyingPartyID:  "ninshow",
+		DSN:                dsn,
+		port:               port,
+		selfEndpoint:       self,
+		oidcEndpoint:       oidc,
+		idTokenSignKey:     key,
+		accessTokenSign:    "sign",
+		relyingPartyID:     "26bf8924-c1d9-484d-8a72-db1df2b05ccd",
+		relyingPartySecret: "ninshow",
 	}
 }
 
@@ -85,6 +87,11 @@ func (cfg *Config) AcessTokenSign() string {
 // RelyingPartyID implements controller.Config.
 func (cfg *Config) RelyingPartyID() string {
 	return cfg.relyingPartyID
+}
+
+// RelyingPartySecret implements controller.Config.
+func (cfg *Config) RelyingPartySecret() string {
+	return cfg.relyingPartySecret
 }
 
 func (cfg *Config) Port() string {

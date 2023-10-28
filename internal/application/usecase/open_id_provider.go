@@ -75,6 +75,8 @@ type OpenIDProviderCallbackOutput struct {
 }
 
 type OpenIDProviderAuthorizationCodeGrantInput struct {
+	ClientID        string
+	ClientSecret    string
 	Issuer          string
 	Code            string
 	AccessTokenSign string

@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/url"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
 
 type OpenIDProvider struct {
+	client       repository.OIDCClient
 	account      repository.Account
 	param        repository.Cache[model.AuthorizeParam]
 	loggedin     repository.Cache[model.LoggedIn]
@@ -29,6 +31,7 @@ type OpenIDProvider struct {
 }
 
 func NewOpenIDProvider(
+	client repository.OIDCClient,
 	account repository.Account,
 	param repository.Cache[model.AuthorizeParam],
 	loggedin repository.Cache[model.LoggedIn],
@@ -36,6 +39,7 @@ func NewOpenIDProvider(
 	refreshToken repository.Cache[string],
 ) *OpenIDProvider {
 	return &OpenIDProvider{
+		client:       client,
 		account:      account,
 		loggedin:     loggedin,
 		param:        param,
@@ -82,6 +86,18 @@ func (op *OpenIDProvider) Autorize(
 ) (*usecase.OpenIDProviderAuthorizeOutput, error) {
 	end := log.StartEnd(ctx)
 	defer end()
+
+	// TODO: ここで検証する必要ってあるの?
+	cli, err := op.client.Find(ctx, input.ClientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find client: %w", err)
+	}
+
+	slog.Info(fmt.Sprintf("%+v", cli))
+
+	// if cli.RedirectURI != input.RedirectURI {
+	// 	return nil, fmt.Errorf("invalid redirect uri")
+	// }
 
 	var buf bytes.Buffer
 
@@ -256,6 +272,18 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 	ctx context.Context,
 	input usecase.OpenIDProviderAuthorizationCodeGrantInput,
 ) (*usecase.OpenIDProviderAuthorizationCodeGrantOutput, error) {
+	end := log.StartEnd(ctx)
+	defer end()
+
+	cli, err := op.client.Find(ctx, input.ClientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find client: %w", err)
+	}
+
+	if err := cli.CompareSecret(input.ClientSecret); err != nil {
+		return nil, fmt.Errorf("failed to compare secret: %w", err)
+	}
+
 	loggedin, err := op.loggedin.Get(ctx, input.Code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get logged in cache: %w", err)

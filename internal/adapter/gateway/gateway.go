@@ -87,6 +87,60 @@ func (ac *Account) FindByUsername(
 	return &account, nil
 }
 
+var _ repository.OIDCClient = (*OIDCClient)(nil)
+
+type OIDCClient struct {
+	rdb *RDB
+}
+
+func NewOIDCClient(
+	rdb *RDB,
+) *OIDCClient {
+	return &OIDCClient{
+		rdb: rdb,
+	}
+}
+
+// Find implements repository.OIDCClient.
+func (oc *OIDCClient) Find(
+	ctx context.Context,
+	id string,
+) (*model.OIDCClient, error) {
+	query := `SELECT id, secret, name, redirect_uri FROM oidc_clients WHERE id = $1`
+
+	row := oc.rdb.Client.QueryRowContext(ctx, query, id)
+
+	var oidcClient model.OIDCClient
+	if err := row.Scan(&oidcClient.ID, &oidcClient.HashSec, &oidcClient.Name, &oidcClient.RedirectURI); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("oidc client not found")
+		}
+
+		return nil, fmt.Errorf("failed to scan row: %w", err)
+	}
+
+	return &oidcClient, nil
+}
+
+// Save implements repository.OIDCClient.
+func (oc *OIDCClient) Save(
+	ctx context.Context,
+	client model.OIDCClient,
+) error {
+	query := `INSERT INTO oidc_clients (id, secret, name, redirect_uri) VALUES ($1, $2, $3, $4)`
+
+	stmt, err := oc.rdb.Client.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+
+	if _, err := stmt.ExecContext(ctx, client.ID, client.HashSec, client.Name, client.RedirectURI); err != nil {
+		return fmt.Errorf("failed to execute statement: %w", err)
+	}
+
+	return nil
+}
+
 var _ repository.Cache[any] = (*KVS[any])(nil)
 
 func NewKVS[T any]() *KVS[T] {

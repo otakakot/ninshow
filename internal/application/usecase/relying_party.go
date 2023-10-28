@@ -28,6 +28,7 @@ type RelyingPartyCallbackInput struct {
 	Code         string
 	OIDCEndpoint string
 	ClientID     string
+	ClientSecret string
 }
 
 type RelyingPartyCallbackOutput struct {

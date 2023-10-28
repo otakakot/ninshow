@@ -19,6 +19,7 @@ type Config interface {
 	IDTokenSignKey() *rsa.PrivateKey
 	AcessTokenSign() string
 	RelyingPartyID() string
+	RelyingPartySecret() string
 }
 
 var _ api.Handler = (*Controller)(nil)
@@ -249,9 +250,16 @@ func (ctl *Controller) OpToken(
 	end := log.StartEnd(ctx)
 	defer end()
 
+	slog.Info(req.ClientID.Value)
+	slog.Info(req.ClientSecret.Value)
+	slog.Info(req.Code)
+	slog.Info(req.Scope.Value)
+
 	switch req.GrantType {
 	case api.OPTokenRequestSchemaGrantTypeAuthorizationCode:
 		output, err := ctl.op.AuthorizationCodeGrant(ctx, usecase.OpenIDProviderAuthorizationCodeGrantInput{
+			ClientID:        req.ClientID.Value,
+			ClientSecret:    req.ClientSecret.Value,
 			Issuer:          ctl.config.SelfEndpoint(),
 			Code:            req.Code,
 			AccessTokenSign: ctl.config.AcessTokenSign(),

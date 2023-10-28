@@ -421,7 +421,9 @@ type OPTokenRequestSchema struct {
 	RefreshToken OptString `json:"refresh_token"`
 	// Client_id.
 	ClientID OptString `json:"client_id"`
-	Scope    OptString `json:"scope"`
+	// Client_secret.
+	ClientSecret OptString `json:"client_secret"`
+	Scope        OptString `json:"scope"`
 }
 
 // GetGrantType returns the value of GrantType.
@@ -447,6 +449,11 @@ func (s *OPTokenRequestSchema) GetRefreshToken() OptString {
 // GetClientID returns the value of ClientID.
 func (s *OPTokenRequestSchema) GetClientID() OptString {
 	return s.ClientID
+}
+
+// GetClientSecret returns the value of ClientSecret.
+func (s *OPTokenRequestSchema) GetClientSecret() OptString {
+	return s.ClientSecret
 }
 
 // GetScope returns the value of Scope.
@@ -477,6 +484,11 @@ func (s *OPTokenRequestSchema) SetRefreshToken(val OptString) {
 // SetClientID sets the value of ClientID.
 func (s *OPTokenRequestSchema) SetClientID(val OptString) {
 	s.ClientID = val
+}
+
+// SetClientSecret sets the value of ClientSecret.
+func (s *OPTokenRequestSchema) SetClientSecret(val OptString) {
+	s.ClientSecret = val
 }
 
 // SetScope sets the value of Scope.

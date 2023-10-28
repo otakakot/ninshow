@@ -93,7 +93,9 @@ paths:
       tags:
         - OP
       summary: Authentication Request
-      description: Authentication Request
+      description: |
+        Authentication Request
+        ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#code-authz-req
       operationId: opAuthorize
       parameters:
         - name: response_type
@@ -231,7 +233,10 @@ paths:
       tags:
         - OP
       summary: OP Token Request
-      description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
+      description: |
+        OP Token Request
+        ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#token-req
+        ref: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
       operationId: opToken
       requestBody:
         description: OP Token request body 
@@ -514,6 +519,10 @@ components:
           type: string
           description: client_id
           example: client_id
+        client_secret:
+          type: string
+          description: client_secret
+          example: client_secret
         scope:
           type: string
           example: openid profile email

@@ -13,6 +13,11 @@ type Account interface {
 	FindByUsername(context.Context, string) (*model.Account, error)
 }
 
+type OIDCClient interface {
+	Save(context.Context, model.OIDCClient) error
+	Find(context.Context, string) (*model.OIDCClient, error)
+}
+
 type Cache[T any] interface {
 	Set(context.Context, string, T, time.Duration) error
 	Get(context.Context, string) (T, error)

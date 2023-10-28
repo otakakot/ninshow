@@ -31,9 +31,10 @@ export const config = {
         }
       },
       idToken: true,
-      clientId: "ninshow",
+      clientId: "26bf8924-c1d9-484d-8a72-db1df2b05ccd",
       clientSecret: "ninshow",
       client: {
+        token_endpoint_auth_method: "client_secret_post",
         authorization_signed_response_alg: "RS256",
         id_token_signed_response_alg: "RS256",
       },

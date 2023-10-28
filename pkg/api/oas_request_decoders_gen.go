@@ -597,6 +597,38 @@ func (s *Server) decodeOpTokenRequest(r *http.Request) (
 		}
 		{
 			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "client_secret",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotClientSecretVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotClientSecretVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.ClientSecret.SetTo(requestDotClientSecretVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"client_secret\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
 				Name:    "scope",
 				Style:   uri.QueryStyleForm,
 				Explode: true,
