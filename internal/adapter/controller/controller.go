@@ -3,12 +3,15 @@ package controller
 import (
 	"context"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
+	derror "github.com/otakakot/ninshow/internal/domain/errors"
 	"github.com/otakakot/ninshow/internal/domain/model"
+
 	"github.com/otakakot/ninshow/pkg/api"
 	"github.com/otakakot/ninshow/pkg/log"
 )
@@ -121,7 +124,30 @@ func (ctl *Controller) OpAuthorize(
 		Nonce:        params.Nonce.Value,
 	})
 	if err != nil {
-		return &api.OpAuthorizeInternalServerError{}, err
+		slog.Warn(err.Error())
+		if errors.Is(err, derror.ErrInvalidRequest) {
+			return &api.OpAuthorizeBadRequest{
+				Error: api.NewOptOpAuthorizeBadRequestError(api.OpAuthorizeBadRequestErrorInvalidRequest),
+			}, nil
+		}
+		if errors.Is(err, derror.ErrUnauthorizedClient) {
+			return &api.OpAuthorizeUnauthorized{
+				Error: api.NewOptOpAuthorizeUnauthorizedError(api.OpAuthorizeUnauthorizedErrorUnauthorizedClient),
+			}, nil
+		}
+		if errors.Is(err, derror.ErrAccessDenied) {
+			return &api.OpAuthorizeForbidden{
+				Error: api.NewOptOpAuthorizeForbiddenError(api.OpAuthorizeForbiddenErrorAccessDenied),
+			}, nil
+		}
+		if errors.Is(err, derror.ErrInvalidScope) {
+			return &api.OpAuthorizeBadRequest{
+				Error: api.NewOptOpAuthorizeBadRequestError(api.OpAuthorizeBadRequestErrorInvalidScope),
+			}, nil
+		}
+		return &api.OpAuthorizeInternalServerError{
+			Error: api.NewOptOpAuthorizeInternalServerErrorError(api.OpAuthorizeInternalServerErrorErrorServerError),
+		}, err
 	}
 
 	res := &api.OpAuthorizeFound{}

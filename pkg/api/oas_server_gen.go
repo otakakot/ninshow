@@ -71,7 +71,9 @@ type Handler interface {
 	OpRevoke(ctx context.Context, req *OPRevokeRequestSchema) (OpRevokeRes, error)
 	// OpToken implements opToken operation.
 	//
-	// Https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
+	// OP Token Request
+	// ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#token-req
+	// ref: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
 	//
 	// POST /op/token
 	OpToken(ctx context.Context, req *OPTokenRequestSchema) (OpTokenRes, error)

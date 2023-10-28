@@ -25,7 +25,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Run("authorization_code_grant", func(t *testing.T) {
+	t.Run("認可コードグラント", func(t *testing.T) {
 		t.Parallel()
 
 		username := uuid.NewString()
@@ -71,12 +71,14 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		// 	t.Fatal(err)
 		// }
 
+		clientID := "e4110264-ca70-4179-8958-195542ddc9bd"
+
 		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
 		params := url.Values{}
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
-		params.Add("client_id", "26bf8924-c1d9-484d-8a72-db1df2b05ccd")
-		params.Add("redirect_uri", "http://localhost:8080/rp/callback")
+		params.Add("client_id", clientID)
+		params.Add("redirect_uri", "http://localhost:8080")
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
@@ -93,5 +95,116 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		}
 
 		fmt.Println("Response body:", resp.Body)
+	})
+
+	t.Run("登録されていないredirect_uriにより失敗", func(t *testing.T) {
+		t.Parallel()
+
+		username := uuid.NewString()
+
+		email := fmt.Sprintf("%s@example.com", uuid.NewString())
+
+		password := uuid.NewString()
+
+		req := api.IdPSignupRequestSchema{
+			Username: username,
+			Email:    email,
+			Password: password,
+		}
+
+		if res, err := cli.IdpSignup(context.Background(), api.NewOptIdPSignupRequestSchema(
+			req,
+		)); err != nil {
+			t.Fatal(err)
+		} else {
+			switch res.(type) {
+			case *api.IdpSignupOK:
+			default:
+				t.Fatalf("unexpected type: %T", res)
+			}
+		}
+
+		state := uuid.NewString()
+
+		nonce := uuid.NewString()
+
+		clientID := "e4110264-ca70-4179-8958-195542ddc9bd"
+
+		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		params := url.Values{}
+		params.Add("response_type", "code")
+		params.Add("scope", "openid profile email")
+		params.Add("client_id", clientID)
+		params.Add("redirect_uri", "http://localhost:5050") // 登録されていないredirect_uri
+		params.Add("state", state)
+		params.Add("nonce", nonce)
+
+		baseUrl.RawQuery = params.Encode()
+
+		resp, err := http.Get(baseUrl.String())
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("unexpected status code: %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("許可されていないclient_idにより失敗", func(t *testing.T) {
+		t.Parallel()
+
+		username := uuid.NewString()
+
+		email := fmt.Sprintf("%s@example.com", uuid.NewString())
+
+		password := uuid.NewString()
+
+		req := api.IdPSignupRequestSchema{
+			Username: username,
+			Email:    email,
+			Password: password,
+		}
+
+		if res, err := cli.IdpSignup(context.Background(), api.NewOptIdPSignupRequestSchema(
+			req,
+		)); err != nil {
+			t.Fatal(err)
+		} else {
+			switch res.(type) {
+			case *api.IdpSignupOK:
+			default:
+				t.Fatalf("unexpected type: %T", res)
+			}
+		}
+
+		state := uuid.NewString()
+
+		nonce := uuid.NewString()
+
+		// 登録していないclient_idを指定
+		clientID := "0e0c59ee-7a05-4f23-a902-433c7f29a12e"
+
+		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		params := url.Values{}
+		params.Add("response_type", "code")
+		params.Add("scope", "openid profile email")
+		params.Add("client_id", clientID)
+		params.Add("redirect_uri", "http://localhost:8080/rp/callback")
+		params.Add("state", state)
+		params.Add("nonce", nonce)
+
+		baseUrl.RawQuery = params.Encode()
+
+		resp, err := http.Get(baseUrl.String())
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Errorf("unexpected status code: %d", resp.StatusCode)
+		}
 	})
 }

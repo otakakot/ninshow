@@ -12,11 +12,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
+
 	"github.com/otakakot/ninshow/internal/application/usecase"
+	"github.com/otakakot/ninshow/internal/domain/errors"
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
 	"github.com/otakakot/ninshow/pkg/log"
-	"golang.org/x/exp/slices"
 )
 
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
@@ -87,17 +89,16 @@ func (op *OpenIDProvider) Autorize(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	// TODO: ここで検証する必要ってあるの?
 	cli, err := op.client.Find(ctx, input.ClientID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find client: %w", err)
+		return nil, errors.ErrUnauthorizedClient
 	}
 
 	slog.Info(fmt.Sprintf("%+v", cli))
 
-	// if cli.RedirectURI != input.RedirectURI {
-	// 	return nil, fmt.Errorf("invalid redirect uri")
-	// }
+	if cli.RedirectURI != input.RedirectURI {
+		return nil, errors.ErrInvalidRequest
+	}
 
 	var buf bytes.Buffer
 
@@ -112,7 +113,7 @@ func (op *OpenIDProvider) Autorize(
 		ClientID:    input.ClientID,
 		Nonce:       input.Nonce,
 	}, time.Second); err != nil {
-		return nil, fmt.Errorf("failed to set cache: %w", err)
+		return nil, errors.ErrServerError
 	}
 
 	values := url.Values{
@@ -277,7 +278,7 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 
 	cli, err := op.client.Find(ctx, input.ClientID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find client: %w", err)
+		return nil, errors.ErrUnauthorizedClient
 	}
 
 	if err := cli.CompareSecret(input.ClientSecret); err != nil {

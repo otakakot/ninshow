@@ -152,8 +152,59 @@ paths:
                 type: string
                 format: uri
                 example: http://localhost:8080/rp/callback
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    enum:
+                      - invalid_request
+                      - invalid_scope
+                    example: invalid_request
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    enum:
+                      - unauthorized_client
+                    example: unauthorized_client
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    enum:
+                      - access_denied
+                    example: access_denied
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    enum:
+                      - server_error
+                    example: server_error
   /op/login:
     get:
       tags:

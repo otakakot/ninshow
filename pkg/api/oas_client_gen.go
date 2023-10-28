@@ -87,7 +87,9 @@ type Invoker interface {
 	OpRevoke(ctx context.Context, request *OPRevokeRequestSchema) (OpRevokeRes, error)
 	// OpToken invokes opToken operation.
 	//
-	// Https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
+	// OP Token Request
+	// ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#token-req
+	// ref: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
 	//
 	// POST /op/token
 	OpToken(ctx context.Context, request *OPTokenRequestSchema) (OpTokenRes, error)
@@ -1084,7 +1086,9 @@ func (c *Client) sendOpRevoke(ctx context.Context, request *OPRevokeRequestSchem
 
 // OpToken invokes opToken operation.
 //
-// Https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
+// OP Token Request
+// ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#token-req
+// ref: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
 //
 // POST /op/token
 func (c *Client) OpToken(ctx context.Context, request *OPTokenRequestSchema) (OpTokenRes, error) {

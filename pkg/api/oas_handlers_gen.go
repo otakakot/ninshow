@@ -1090,7 +1090,9 @@ func (s *Server) handleOpRevokeRequest(args [0]string, argsEscaped bool, w http.
 
 // handleOpTokenRequest handles opToken operation.
 //
-// Https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
+// OP Token Request
+// ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#token-req
+// ref: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
 //
 // POST /op/token
 func (s *Server) handleOpTokenRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {

@@ -745,6 +745,117 @@ func (s *OPUserInfoResponseSchema) SetEmail(val OptString) {
 
 func (*OPUserInfoResponseSchema) opUserinfoRes() {}
 
+type OpAuthorizeBadRequest struct {
+	// Error.
+	Error OptOpAuthorizeBadRequestError `json:"error"`
+}
+
+// GetError returns the value of Error.
+func (s *OpAuthorizeBadRequest) GetError() OptOpAuthorizeBadRequestError {
+	return s.Error
+}
+
+// SetError sets the value of Error.
+func (s *OpAuthorizeBadRequest) SetError(val OptOpAuthorizeBadRequestError) {
+	s.Error = val
+}
+
+func (*OpAuthorizeBadRequest) opAuthorizeRes() {}
+
+// Error.
+type OpAuthorizeBadRequestError string
+
+const (
+	OpAuthorizeBadRequestErrorInvalidRequest OpAuthorizeBadRequestError = "invalid_request"
+	OpAuthorizeBadRequestErrorInvalidScope   OpAuthorizeBadRequestError = "invalid_scope"
+)
+
+// AllValues returns all OpAuthorizeBadRequestError values.
+func (OpAuthorizeBadRequestError) AllValues() []OpAuthorizeBadRequestError {
+	return []OpAuthorizeBadRequestError{
+		OpAuthorizeBadRequestErrorInvalidRequest,
+		OpAuthorizeBadRequestErrorInvalidScope,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OpAuthorizeBadRequestError) MarshalText() ([]byte, error) {
+	switch s {
+	case OpAuthorizeBadRequestErrorInvalidRequest:
+		return []byte(s), nil
+	case OpAuthorizeBadRequestErrorInvalidScope:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OpAuthorizeBadRequestError) UnmarshalText(data []byte) error {
+	switch OpAuthorizeBadRequestError(data) {
+	case OpAuthorizeBadRequestErrorInvalidRequest:
+		*s = OpAuthorizeBadRequestErrorInvalidRequest
+		return nil
+	case OpAuthorizeBadRequestErrorInvalidScope:
+		*s = OpAuthorizeBadRequestErrorInvalidScope
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type OpAuthorizeForbidden struct {
+	// Error.
+	Error OptOpAuthorizeForbiddenError `json:"error"`
+}
+
+// GetError returns the value of Error.
+func (s *OpAuthorizeForbidden) GetError() OptOpAuthorizeForbiddenError {
+	return s.Error
+}
+
+// SetError sets the value of Error.
+func (s *OpAuthorizeForbidden) SetError(val OptOpAuthorizeForbiddenError) {
+	s.Error = val
+}
+
+func (*OpAuthorizeForbidden) opAuthorizeRes() {}
+
+// Error.
+type OpAuthorizeForbiddenError string
+
+const (
+	OpAuthorizeForbiddenErrorAccessDenied OpAuthorizeForbiddenError = "access_denied"
+)
+
+// AllValues returns all OpAuthorizeForbiddenError values.
+func (OpAuthorizeForbiddenError) AllValues() []OpAuthorizeForbiddenError {
+	return []OpAuthorizeForbiddenError{
+		OpAuthorizeForbiddenErrorAccessDenied,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OpAuthorizeForbiddenError) MarshalText() ([]byte, error) {
+	switch s {
+	case OpAuthorizeForbiddenErrorAccessDenied:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OpAuthorizeForbiddenError) UnmarshalText(data []byte) error {
+	switch OpAuthorizeForbiddenError(data) {
+	case OpAuthorizeForbiddenErrorAccessDenied:
+		*s = OpAuthorizeForbiddenErrorAccessDenied
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // OpAuthorizeFound is response for OpAuthorize operation.
 type OpAuthorizeFound struct {
 	Location OptURI
@@ -762,10 +873,57 @@ func (s *OpAuthorizeFound) SetLocation(val OptURI) {
 
 func (*OpAuthorizeFound) opAuthorizeRes() {}
 
-// OpAuthorizeInternalServerError is response for OpAuthorize operation.
-type OpAuthorizeInternalServerError struct{}
+type OpAuthorizeInternalServerError struct {
+	// Error.
+	Error OptOpAuthorizeInternalServerErrorError `json:"error"`
+}
+
+// GetError returns the value of Error.
+func (s *OpAuthorizeInternalServerError) GetError() OptOpAuthorizeInternalServerErrorError {
+	return s.Error
+}
+
+// SetError sets the value of Error.
+func (s *OpAuthorizeInternalServerError) SetError(val OptOpAuthorizeInternalServerErrorError) {
+	s.Error = val
+}
 
 func (*OpAuthorizeInternalServerError) opAuthorizeRes() {}
+
+// Error.
+type OpAuthorizeInternalServerErrorError string
+
+const (
+	OpAuthorizeInternalServerErrorErrorServerError OpAuthorizeInternalServerErrorError = "server_error"
+)
+
+// AllValues returns all OpAuthorizeInternalServerErrorError values.
+func (OpAuthorizeInternalServerErrorError) AllValues() []OpAuthorizeInternalServerErrorError {
+	return []OpAuthorizeInternalServerErrorError{
+		OpAuthorizeInternalServerErrorErrorServerError,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OpAuthorizeInternalServerErrorError) MarshalText() ([]byte, error) {
+	switch s {
+	case OpAuthorizeInternalServerErrorErrorServerError:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OpAuthorizeInternalServerErrorError) UnmarshalText(data []byte) error {
+	switch OpAuthorizeInternalServerErrorError(data) {
+	case OpAuthorizeInternalServerErrorErrorServerError:
+		*s = OpAuthorizeInternalServerErrorErrorServerError
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 type OpAuthorizeResponseType string
 
@@ -795,6 +953,58 @@ func (s *OpAuthorizeResponseType) UnmarshalText(data []byte) error {
 	switch OpAuthorizeResponseType(data) {
 	case OpAuthorizeResponseTypeCode:
 		*s = OpAuthorizeResponseTypeCode
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type OpAuthorizeUnauthorized struct {
+	// Error.
+	Error OptOpAuthorizeUnauthorizedError `json:"error"`
+}
+
+// GetError returns the value of Error.
+func (s *OpAuthorizeUnauthorized) GetError() OptOpAuthorizeUnauthorizedError {
+	return s.Error
+}
+
+// SetError sets the value of Error.
+func (s *OpAuthorizeUnauthorized) SetError(val OptOpAuthorizeUnauthorizedError) {
+	s.Error = val
+}
+
+func (*OpAuthorizeUnauthorized) opAuthorizeRes() {}
+
+// Error.
+type OpAuthorizeUnauthorizedError string
+
+const (
+	OpAuthorizeUnauthorizedErrorUnauthorizedClient OpAuthorizeUnauthorizedError = "unauthorized_client"
+)
+
+// AllValues returns all OpAuthorizeUnauthorizedError values.
+func (OpAuthorizeUnauthorizedError) AllValues() []OpAuthorizeUnauthorizedError {
+	return []OpAuthorizeUnauthorizedError{
+		OpAuthorizeUnauthorizedErrorUnauthorizedClient,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OpAuthorizeUnauthorizedError) MarshalText() ([]byte, error) {
+	switch s {
+	case OpAuthorizeUnauthorizedErrorUnauthorizedClient:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OpAuthorizeUnauthorizedError) UnmarshalText(data []byte) error {
+	switch OpAuthorizeUnauthorizedError(data) {
+	case OpAuthorizeUnauthorizedErrorUnauthorizedClient:
+		*s = OpAuthorizeUnauthorizedErrorUnauthorizedClient
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -1062,6 +1272,190 @@ func (o OptOPRevokeRequestSchemaTokenTypeHint) Get() (v OPRevokeRequestSchemaTok
 
 // Or returns value if set, or given parameter if does not.
 func (o OptOPRevokeRequestSchemaTokenTypeHint) Or(d OPRevokeRequestSchemaTokenTypeHint) OPRevokeRequestSchemaTokenTypeHint {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptOpAuthorizeBadRequestError returns new OptOpAuthorizeBadRequestError with value set to v.
+func NewOptOpAuthorizeBadRequestError(v OpAuthorizeBadRequestError) OptOpAuthorizeBadRequestError {
+	return OptOpAuthorizeBadRequestError{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOpAuthorizeBadRequestError is optional OpAuthorizeBadRequestError.
+type OptOpAuthorizeBadRequestError struct {
+	Value OpAuthorizeBadRequestError
+	Set   bool
+}
+
+// IsSet returns true if OptOpAuthorizeBadRequestError was set.
+func (o OptOpAuthorizeBadRequestError) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOpAuthorizeBadRequestError) Reset() {
+	var v OpAuthorizeBadRequestError
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOpAuthorizeBadRequestError) SetTo(v OpAuthorizeBadRequestError) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOpAuthorizeBadRequestError) Get() (v OpAuthorizeBadRequestError, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOpAuthorizeBadRequestError) Or(d OpAuthorizeBadRequestError) OpAuthorizeBadRequestError {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptOpAuthorizeForbiddenError returns new OptOpAuthorizeForbiddenError with value set to v.
+func NewOptOpAuthorizeForbiddenError(v OpAuthorizeForbiddenError) OptOpAuthorizeForbiddenError {
+	return OptOpAuthorizeForbiddenError{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOpAuthorizeForbiddenError is optional OpAuthorizeForbiddenError.
+type OptOpAuthorizeForbiddenError struct {
+	Value OpAuthorizeForbiddenError
+	Set   bool
+}
+
+// IsSet returns true if OptOpAuthorizeForbiddenError was set.
+func (o OptOpAuthorizeForbiddenError) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOpAuthorizeForbiddenError) Reset() {
+	var v OpAuthorizeForbiddenError
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOpAuthorizeForbiddenError) SetTo(v OpAuthorizeForbiddenError) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOpAuthorizeForbiddenError) Get() (v OpAuthorizeForbiddenError, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOpAuthorizeForbiddenError) Or(d OpAuthorizeForbiddenError) OpAuthorizeForbiddenError {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptOpAuthorizeInternalServerErrorError returns new OptOpAuthorizeInternalServerErrorError with value set to v.
+func NewOptOpAuthorizeInternalServerErrorError(v OpAuthorizeInternalServerErrorError) OptOpAuthorizeInternalServerErrorError {
+	return OptOpAuthorizeInternalServerErrorError{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOpAuthorizeInternalServerErrorError is optional OpAuthorizeInternalServerErrorError.
+type OptOpAuthorizeInternalServerErrorError struct {
+	Value OpAuthorizeInternalServerErrorError
+	Set   bool
+}
+
+// IsSet returns true if OptOpAuthorizeInternalServerErrorError was set.
+func (o OptOpAuthorizeInternalServerErrorError) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOpAuthorizeInternalServerErrorError) Reset() {
+	var v OpAuthorizeInternalServerErrorError
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOpAuthorizeInternalServerErrorError) SetTo(v OpAuthorizeInternalServerErrorError) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOpAuthorizeInternalServerErrorError) Get() (v OpAuthorizeInternalServerErrorError, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOpAuthorizeInternalServerErrorError) Or(d OpAuthorizeInternalServerErrorError) OpAuthorizeInternalServerErrorError {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptOpAuthorizeUnauthorizedError returns new OptOpAuthorizeUnauthorizedError with value set to v.
+func NewOptOpAuthorizeUnauthorizedError(v OpAuthorizeUnauthorizedError) OptOpAuthorizeUnauthorizedError {
+	return OptOpAuthorizeUnauthorizedError{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOpAuthorizeUnauthorizedError is optional OpAuthorizeUnauthorizedError.
+type OptOpAuthorizeUnauthorizedError struct {
+	Value OpAuthorizeUnauthorizedError
+	Set   bool
+}
+
+// IsSet returns true if OptOpAuthorizeUnauthorizedError was set.
+func (o OptOpAuthorizeUnauthorizedError) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOpAuthorizeUnauthorizedError) Reset() {
+	var v OpAuthorizeUnauthorizedError
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOpAuthorizeUnauthorizedError) SetTo(v OpAuthorizeUnauthorizedError) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOpAuthorizeUnauthorizedError) Get() (v OpAuthorizeUnauthorizedError, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOpAuthorizeUnauthorizedError) Or(d OpAuthorizeUnauthorizedError) OpAuthorizeUnauthorizedError {
 	if v, ok := o.Get(); ok {
 		return v
 	}

@@ -106,7 +106,9 @@ func (UnimplementedHandler) OpRevoke(ctx context.Context, req *OPRevokeRequestSc
 
 // OpToken implements opToken operation.
 //
-// Https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
+// OP Token Request
+// ref: https://openid-foundation-japan.github.io/rfc6749.ja.html#token-req
+// ref: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest.
 //
 // POST /op/token
 func (UnimplementedHandler) OpToken(ctx context.Context, req *OPTokenRequestSchema) (r OpTokenRes, _ error) {
