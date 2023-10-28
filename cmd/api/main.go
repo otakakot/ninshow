@@ -38,7 +38,7 @@ func main() {
 		cfg.RelyingPartyID(),
 		"ninshow",
 		cfg.RelyingPartySecret(),
-		"http://localhost:3000",
+		"http://localhost:8080/rp/callback",
 	))
 
 	// for NextAuth
@@ -47,14 +47,6 @@ func main() {
 		"ninshow",
 		"ninshow",
 		"http://localhost:3000/api/auth/callback/ninshow",
-	))
-
-	// for E2Eテスト
-	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
-		"e4110264-ca70-4179-8958-195542ddc9bd",
-		"test",
-		"test",
-		"http://localhost:8080",
 	))
 
 	acc, _ := model.SingupAccount("test", "test@example.com", "test")

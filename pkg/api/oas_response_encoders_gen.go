@@ -266,13 +266,32 @@ func encodeOpLoginResponse(response OpLoginRes, w http.ResponseWriter, span trac
 
 func encodeOpLoginViewResponse(response OpLoginViewRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *OpLoginViewOK:
+	case *OpLoginViewOKHeaders:
 		w.Header().Set("Content-Type", "text/html")
+		// Encoding response headers.
+		{
+			h := uri.NewHeaderEncoder(w.Header())
+			// Encode "X-Request-Id" header.
+			{
+				cfg := uri.HeaderParameterEncodingConfig{
+					Name:    "X-Request-Id",
+					Explode: false,
+				}
+				if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+					if val, ok := response.XRequestID.Get(); ok {
+						return e.EncodeValue(conv.StringToString(val))
+					}
+					return nil
+				}); err != nil {
+					return errors.Wrap(err, "encode X-Request-Id header")
+				}
+			}
+		}
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 
 		writer := w
-		if _, err := io.Copy(writer, response); err != nil {
+		if _, err := io.Copy(writer, response.Response); err != nil {
 			return errors.Wrap(err, "write")
 		}
 

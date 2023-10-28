@@ -223,6 +223,11 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            X-Request-Id:
+              schema:
+                type: string
+                example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
           content:
             text/html:
               schema:

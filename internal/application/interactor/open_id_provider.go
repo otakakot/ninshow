@@ -108,8 +108,6 @@ func (op *OpenIDProvider) Autorize(
 
 	id := uuid.NewString()
 
-	slog.Info(fmt.Sprintf("%+v", input.Scope))
-
 	if err := model.ValidateScope(input.Scope); err != nil {
 		return nil, errors.Wrap(err, "invalid_scope")
 	}

@@ -236,8 +236,13 @@ func (ctl *Controller) OpLoginView(ctx context.Context, params api.OpLoginViewPa
 		return &api.OpLoginViewInternalServerError{}, err
 	}
 
-	return &api.OpLoginViewOK{
-		Data: output.Data,
+	slog.Info("login view", "auth_request_id", params.AuthRequestID)
+
+	return &api.OpLoginViewOKHeaders{
+		XRequestID: api.NewOptString(params.AuthRequestID),
+		Response: api.OpLoginViewOK{
+			Data: output.Data,
+		},
 	}, nil
 }
 
@@ -402,6 +407,7 @@ func (ctl *Controller) RpCallback(
 		Code:         params.Code,
 		OIDCEndpoint: ctl.config.SelfEndpoint(),
 		ClientID:     ctl.config.RelyingPartyID(),
+		ClientSecret: ctl.config.RelyingPartySecret(),
 	})
 	if err != nil {
 		return &api.RpCallbackInternalServerError{}, err

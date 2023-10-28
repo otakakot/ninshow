@@ -1079,7 +1079,33 @@ func (s OpLoginViewOK) Read(p []byte) (n int, err error) {
 	return s.Data.Read(p)
 }
 
-func (*OpLoginViewOK) opLoginViewRes() {}
+// OpLoginViewOKHeaders wraps OpLoginViewOK with response headers.
+type OpLoginViewOKHeaders struct {
+	XRequestID OptString
+	Response   OpLoginViewOK
+}
+
+// GetXRequestID returns the value of XRequestID.
+func (s *OpLoginViewOKHeaders) GetXRequestID() OptString {
+	return s.XRequestID
+}
+
+// GetResponse returns the value of Response.
+func (s *OpLoginViewOKHeaders) GetResponse() OpLoginViewOK {
+	return s.Response
+}
+
+// SetXRequestID sets the value of XRequestID.
+func (s *OpLoginViewOKHeaders) SetXRequestID(val OptString) {
+	s.XRequestID = val
+}
+
+// SetResponse sets the value of Response.
+func (s *OpLoginViewOKHeaders) SetResponse(val OpLoginViewOK) {
+	s.Response = val
+}
+
+func (*OpLoginViewOKHeaders) opLoginViewRes() {}
 
 // OpOpenIDConfigurationInternalServerError is response for OpOpenIDConfiguration operation.
 type OpOpenIDConfigurationInternalServerError struct{}
