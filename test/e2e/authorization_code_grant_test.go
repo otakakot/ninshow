@@ -97,6 +97,61 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		fmt.Println("Response body:", resp.Body)
 	})
 
+	t.Run("許可されていないscopeにより失敗", func(t *testing.T) {
+		t.Parallel()
+
+		username := uuid.NewString()
+
+		email := fmt.Sprintf("%s@example.com", uuid.NewString())
+
+		password := uuid.NewString()
+
+		req := api.IdPSignupRequestSchema{
+			Username: username,
+			Email:    email,
+			Password: password,
+		}
+
+		if res, err := cli.IdpSignup(context.Background(), api.NewOptIdPSignupRequestSchema(
+			req,
+		)); err != nil {
+			t.Fatal(err)
+		} else {
+			switch res.(type) {
+			case *api.IdpSignupOK:
+			default:
+				t.Fatalf("unexpected type: %T", res)
+			}
+		}
+
+		state := uuid.NewString()
+
+		nonce := uuid.NewString()
+
+		clientID := "e4110264-ca70-4179-8958-195542ddc9bd"
+
+		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		params := url.Values{}
+		params.Add("response_type", "code")
+		params.Add("scope", "openid phone") // 許可されていないscope phone を含める
+		params.Add("client_id", clientID)
+		params.Add("redirect_uri", "http://localhost:8080")
+		params.Add("state", state)
+		params.Add("nonce", nonce)
+
+		baseUrl.RawQuery = params.Encode()
+
+		resp, err := http.Get(baseUrl.String())
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("unexpected status code: %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("登録されていないredirect_uriにより失敗", func(t *testing.T) {
 		t.Parallel()
 
@@ -191,7 +246,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
 		params.Add("client_id", clientID)
-		params.Add("redirect_uri", "http://localhost:8080/rp/callback")
+		params.Add("redirect_uri", "http://localhost:8080")
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 

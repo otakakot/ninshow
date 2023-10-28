@@ -11,11 +11,12 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/google/uuid"
 	"golang.org/x/exp/slices"
 
 	"github.com/otakakot/ninshow/internal/application/usecase"
-	"github.com/otakakot/ninshow/internal/domain/errors"
+	derror "github.com/otakakot/ninshow/internal/domain/errors"
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
 	"github.com/otakakot/ninshow/pkg/log"
@@ -91,13 +92,14 @@ func (op *OpenIDProvider) Autorize(
 
 	cli, err := op.client.Find(ctx, input.ClientID)
 	if err != nil {
-		return nil, errors.ErrUnauthorizedClient
+		return nil, derror.ErrUnauthorizedClient
 	}
 
 	slog.Info(fmt.Sprintf("%+v", cli))
 
 	if cli.RedirectURI != input.RedirectURI {
-		return nil, errors.ErrInvalidRequest
+		slog.Warn(fmt.Sprintf("input: %v, got: %v", input.RedirectURI, cli.RedirectURI))
+		return nil, derror.ErrInvalidRequest
 	}
 
 	var buf bytes.Buffer
@@ -106,6 +108,12 @@ func (op *OpenIDProvider) Autorize(
 
 	id := uuid.NewString()
 
+	slog.Info(fmt.Sprintf("%+v", input.Scope))
+
+	if err := model.ValidateScope(input.Scope); err != nil {
+		return nil, errors.Wrap(err, "invalid_scope")
+	}
+
 	if err := op.param.Set(ctx, id, model.AuthorizeParam{
 		RedirectURI: input.RedirectURI,
 		State:       input.State,
@@ -113,7 +121,7 @@ func (op *OpenIDProvider) Autorize(
 		ClientID:    input.ClientID,
 		Nonce:       input.Nonce,
 	}, time.Second); err != nil {
-		return nil, errors.ErrServerError
+		return nil, derror.ErrServerError
 	}
 
 	values := url.Values{
@@ -278,7 +286,7 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 
 	cli, err := op.client.Find(ctx, input.ClientID)
 	if err != nil {
-		return nil, errors.ErrUnauthorizedClient
+		return nil, derror.ErrUnauthorizedClient
 	}
 
 	if err := cli.CompareSecret(input.ClientSecret); err != nil {

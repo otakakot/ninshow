@@ -46,7 +46,7 @@ func main() {
 		"f398d470-ce98-4aa9-a39c-fd25c04aa282",
 		"ninshow",
 		"ninshow",
-		"http://localhost:8080",
+		"http://localhost:3000/api/auth/callback/ninshow",
 	))
 
 	// for E2Eテスト

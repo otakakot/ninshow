@@ -3,12 +3,34 @@ package model
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/otakakot/ninshow/internal/domain/errors"
 )
 
 // ref. https://qiita.com/TakahikoKawasaki/items/970548727761f9e02bcd
+
+var (
+	AllowedScopes = []string{
+		"openid",
+		"profile",
+		"email",
+	}
+)
+
+func ValidateScope(
+	scope []string,
+) error {
+	for _, v := range scope {
+		if !slices.Contains(AllowedScopes, v) {
+			return errors.ErrInvalidScope
+		}
+	}
+
+	return nil
+}
 
 type AccessToken struct {
 	Iss      string   `json:"iss"`

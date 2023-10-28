@@ -109,15 +109,10 @@ func (ctl *Controller) OpAuthorize(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	scope := make([]string, len(params.Scope))
-	for i, v := range params.Scope {
-		scope[i] = string(v)
-	}
-
 	output, err := ctl.op.Autorize(ctx, usecase.OpenIDProviderAuthorizeInput{
 		LoginURL:     fmt.Sprintf("%s/op/login", ctl.config.SelfEndpoint()),
 		ResponseType: string(params.ResponseType),
-		Scope:        scope,
+		Scope:        strings.Split(params.Scope, " "),
 		ClientID:     params.ClientID.String(),
 		RedirectURI:  params.RedirectURI.String(),
 		State:        params.State.Value,
