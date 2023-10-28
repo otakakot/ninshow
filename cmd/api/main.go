@@ -33,11 +33,28 @@ func main() {
 
 	oidcCliRepo := gateway.NewOIDCClient(rdb)
 
+	// for ReryintParty
 	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
 		cfg.RelyingPartyID(),
 		"ninshow",
 		cfg.RelyingPartySecret(),
 		"htttp://localhost:3000",
+	))
+
+	// for NextAuth
+	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
+		"f398d470-ce98-4aa9-a39c-fd25c04aa282",
+		"ninshow",
+		"ninshow",
+		"htttp://localhost:8080",
+	))
+
+	// for E2Eテスト
+	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
+		"e4110264-ca70-4179-8958-195542ddc9bd",
+		"test",
+		"test",
+		"htttp://localhost:8080",
 	))
 
 	acc, _ := model.SingupAccount("test", "test@example.com", "test")

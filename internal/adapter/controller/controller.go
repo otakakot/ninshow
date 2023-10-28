@@ -250,11 +250,6 @@ func (ctl *Controller) OpToken(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	slog.Info(req.ClientID.Value)
-	slog.Info(req.ClientSecret.Value)
-	slog.Info(req.Code)
-	slog.Info(req.Scope.Value)
-
 	switch req.GrantType {
 	case api.OPTokenRequestSchemaGrantTypeAuthorizationCode:
 		output, err := ctl.op.AuthorizationCodeGrant(ctx, usecase.OpenIDProviderAuthorizationCodeGrantInput{
