@@ -459,35 +459,37 @@ components:
     IdPSignupRequestSchema:
       type: object
       properties:
-        username:
+        name:
           type: string
-          description: username
-          example: username
+          description: name
+          example: name
         email:
           type: string
           format: email
-          example: kotaro.otaka@example.com
+          description: email
+          example: example@example.com
         password:
           type: string
           description: password
           example: password
       required:
-        - username
+        - name
         - email
         - password
     IdPSigninRequestSchema:
       type: object
       properties:
-        username:
+        email:
           type: string
-          description: username
-          example: username
+          format: email
+          description: email
+          example: example@example.com
         password:
           type: string
           description: password
           example: password
       required:
-        - username
+        - email
         - password
     OPOpenIDConfigurationResponseSchema:
       type: object
@@ -536,17 +538,18 @@ components:
           type: string
           description: id
           example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        username:
+        email:
           type: string
-          description: username
-          example: example
+          format: email
+          description: email
+          example: example@example.com
         password:
           type: string
           description: password
           example: password
       required:
         - id
-        - username
+        - email
         - password
     OPTokenRequestSchema:
       type: object

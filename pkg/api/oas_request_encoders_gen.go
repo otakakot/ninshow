@@ -77,14 +77,14 @@ func encodeOpLoginRequest(
 		}
 	}
 	{
-		// Encode "username" form field.
+		// Encode "email" form field.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "username",
+			Name:    "email",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(request.Username))
+			return e.EncodeValue(conv.StringToString(request.Email))
 		}); err != nil {
 			return errors.Wrap(err, "encode query")
 		}

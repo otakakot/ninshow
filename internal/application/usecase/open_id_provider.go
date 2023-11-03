@@ -57,7 +57,7 @@ type OpenIDProviderLoginViewOutput struct {
 
 type OpenIDProviderLoginInput struct {
 	ID          string
-	Username    string
+	Email       string
 	Password    string
 	CallbackURL string
 }

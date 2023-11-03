@@ -251,6 +251,22 @@ func (c *Client) sendIdpSignin(ctx context.Context, request OptIdPSigninRequestS
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/idp/signin"),
 	}
+	// Validate request before sending.
+	if err := func() error {
+		if value, ok := request.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return res, errors.Wrap(err, "validate")
+	}
 
 	// Run stopwatch.
 	startTime := time.Now()
@@ -745,6 +761,15 @@ func (c *Client) sendOpLogin(ctx context.Context, request *OPLoginRequestSchema)
 		otelogen.OperationID("opLogin"),
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/op/login"),
+	}
+	// Validate request before sending.
+	if err := func() error {
+		if err := request.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return res, errors.Wrap(err, "validate")
 	}
 
 	// Run stopwatch.

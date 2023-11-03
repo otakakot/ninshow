@@ -4,23 +4,43 @@ datasource db {
 }
 
 model oidc_clients {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String   @default("")
-  secret       Bytes
-  redirect_uri String   @default("")
-  created_at   DateTime @default(now()) @db.Timestamptz(3)
-  updated_at   DateTime @default(now()) @db.Timestamptz(3)
-  deleted      Boolean  @default(false)
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String        @default("")
+  redirect_uri String        @default("")
+  created_at   DateTime      @default(now()) @db.Timestamptz(3)
+  updated_at   DateTime      @default(now()) @db.Timestamptz(3)
+  deleted      Boolean       @default(false)
+  secret       oidc_secrets?
+}
+
+model oidc_secrets {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  value      Bytes
+  client_id  String       @unique @db.Uuid
+  created_at DateTime     @default(now()) @db.Timestamptz(3)
+  updated_at DateTime     @default(now()) @db.Timestamptz(3)
+  client     oidc_clients @relation(fields: [client_id], references: [id])
+
+  @@index([client_id])
 }
 
 model accounts {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String           @default("")
+  email          String           @unique
+  created_at     DateTime         @default(now()) @db.Timestamptz(3)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(3)
+  deleted        Boolean          @default(false)
+  password_authn password_authns?
+}
+
+model password_authns {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email      String   @unique
-  username   String   @default("")
-  password   Bytes
+  value      Bytes
+  account_id String   @unique @db.Uuid
   created_at DateTime @default(now()) @db.Timestamptz(3)
   updated_at DateTime @default(now()) @db.Timestamptz(3)
-  deleted    Boolean  @default(false)
+  account    accounts @relation(fields: [account_id], references: [id])
 
-  @@index([username])
+  @@index([account_id])
 }

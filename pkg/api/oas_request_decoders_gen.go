@@ -79,6 +79,21 @@ func (s *Server) decodeIdpSigninRequest(r *http.Request) (
 			}
 			return req, close, err
 		}
+		if err := func() error {
+			if value, ok := request.Get(); ok {
+				if err := func() error {
+					if err := value.Validate(); err != nil {
+						return err
+					}
+					return nil
+				}(); err != nil {
+					return err
+				}
+			}
+			return nil
+		}(); err != nil {
+			return req, close, errors.Wrap(err, "validate")
+		}
 		return request, close, nil
 	default:
 		return req, close, validate.InvalidContentType(ct)
@@ -232,7 +247,7 @@ func (s *Server) decodeOpLoginRequest(r *http.Request) (
 		}
 		{
 			cfg := uri.QueryParameterDecodingConfig{
-				Name:    "username",
+				Name:    "email",
 				Style:   uri.QueryStyleForm,
 				Explode: true,
 			}
@@ -248,10 +263,26 @@ func (s *Server) decodeOpLoginRequest(r *http.Request) (
 						return err
 					}
 
-					request.Username = c
+					request.Email = c
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"username\"")
+					return req, close, errors.Wrap(err, "decode \"email\"")
+				}
+				if err := func() error {
+					if err := (validate.String{
+						MinLength:    0,
+						MinLengthSet: false,
+						MaxLength:    0,
+						MaxLengthSet: false,
+						Email:        true,
+						Hostname:     false,
+						Regex:        nil,
+					}).Validate(string(request.Email)); err != nil {
+						return errors.Wrap(err, "string")
+					}
+					return nil
+				}(); err != nil {
+					return req, close, errors.Wrap(err, "validate")
 				}
 			} else {
 				return req, close, errors.Wrap(err, "query")

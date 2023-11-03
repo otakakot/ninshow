@@ -157,8 +157,8 @@ func (*OpenIDProvider) LoginVeiw(
 				<input type="hidden" name="id" value="{{.ID}}">
 
 				<div style="color:white;">
-					<label for="username">Username:</label>
-					<input id="username" name="username" style="width: 100%">
+					<label for="email">Email:</label>
+					<input id="email" name="email" style="width: 100%">
 				</div>
 
 				<div style="color:white;">
@@ -203,10 +203,18 @@ func (op *OpenIDProvider) Login(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	account, err := op.account.FindByUsername(ctx, input.Username)
+	account, err := op.account.FindByEmail(ctx, input.Email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find account: %w", err)
 	}
+
+	hashPass, err := op.account.FindPassword(ctx, account.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find password: %w", err)
+	}
+
+	// FIXME: 微妙 ...
+	account.HashPass = hashPass
 
 	if err != account.ComparePassword(input.Password) {
 		return nil, fmt.Errorf("failed to compare password: %w", err)
@@ -287,6 +295,14 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 		return nil, derror.ErrUnauthorizedClient
 	}
 
+	hashSec, err := op.client.FindSecret(ctx, input.ClientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find secret: %w", err)
+	}
+
+	// FIXME: 微妙 ...
+	cli.HashSec = hashSec
+
 	if err := cli.CompareSecret(input.ClientSecret); err != nil {
 		return nil, fmt.Errorf("failed to compare secret: %w", err)
 	}
@@ -331,7 +347,7 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 	)
 
 	if slices.Contains(param.Scope, "profile") {
-		profile = &account.Username
+		profile = &account.Name
 	}
 
 	if slices.Contains(param.Scope, "email") {
@@ -397,7 +413,7 @@ func (op *OpenIDProvider) RefreshTkenGrant(
 	)
 
 	if slices.Contains(input.Scope, "profile") {
-		profile = &account.Username
+		profile = &account.Name
 	}
 
 	if slices.Contains(input.Scope, "email") {
@@ -438,7 +454,7 @@ func (op *OpenIDProvider) Userinfo(
 	}
 
 	if slices.Contains(input.AccessToken.Scope, "profile") {
-		output.Profile = &account.Username
+		output.Profile = &account.Name
 	}
 
 	if slices.Contains(input.AccessToken.Scope, "email") {

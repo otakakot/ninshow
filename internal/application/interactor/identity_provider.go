@@ -33,7 +33,7 @@ func (idp *IdentityProvider) Signup(
 	defer end()
 
 	account, err := model.SingupAccount(
-		input.Username,
+		input.Name,
 		input.Email,
 		input.Password,
 	)
@@ -56,10 +56,17 @@ func (idp *IdentityProvider) Signin(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	account, err := idp.account.FindByUsername(ctx, input.Username)
+	account, err := idp.account.FindByEmail(ctx, input.Email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find account: %w", err)
 	}
+
+	hashPass, err := idp.account.FindPassword(ctx, account.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find password: %w", err)
+	}
+
+	account.HashPass = hashPass
 
 	if err != account.ComparePassword(input.Password) {
 		return nil, fmt.Errorf("failed to compare password: %w", err)

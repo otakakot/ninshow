@@ -5,18 +5,14 @@ table "accounts" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "email" {
-    null = false
-    type = text
-  }
-  column "username" {
+  column "name" {
     null    = false
     type    = text
     default = ""
   }
-  column "password" {
+  column "email" {
     null = false
-    type = bytea
+    type = text
   }
   column "created_at" {
     null    = false
@@ -40,8 +36,10 @@ table "accounts" {
     unique  = true
     columns = [column.email]
   }
-  index "accounts_username_idx" {
-    columns = [column.username]
+  index "accounts_email_not_deleted_index" {
+    unique  = true
+    columns = [column.email]
+    where   = "(NOT deleted)"
   }
 }
 table "oidc_clients" {
@@ -55,10 +53,6 @@ table "oidc_clients" {
     null    = false
     type    = text
     default = ""
-  }
-  column "secret" {
-    null = false
-    type = bytea
   }
   column "redirect_uri" {
     null    = false
@@ -82,6 +76,90 @@ table "oidc_clients" {
   }
   primary_key {
     columns = [column.id]
+  }
+}
+table "oidc_secrets" {
+  schema = schema.public
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz(3)
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "updated_at" {
+    null    = false
+    type    = timestamptz(3)
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "value" {
+    null = false
+    type = bytea
+  }
+  column "client_id" {
+    null = false
+    type = uuid
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  foreign_key "oidc_secrets_client_id_fkey" {
+    columns     = [column.client_id]
+    ref_columns = [table.oidc_clients.column.id]
+    on_update   = CASCADE
+    on_delete   = RESTRICT
+  }
+  index "oidc_secrets_client_id_idx" {
+    columns = [column.client_id]
+  }
+  index "oidc_secrets_client_id_key" {
+    unique  = true
+    columns = [column.client_id]
+  }
+}
+table "password_authns" {
+  schema = schema.public
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "account_id" {
+    null = false
+    type = uuid
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz(3)
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "updated_at" {
+    null    = false
+    type    = timestamptz(3)
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "value" {
+    null = false
+    type = bytea
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  foreign_key "password_authns_account_id_fkey" {
+    columns     = [column.account_id]
+    ref_columns = [table.accounts.column.id]
+    on_update   = CASCADE
+    on_delete   = RESTRICT
+  }
+  index "password_authns_account_id_idx" {
+    columns = [column.account_id]
+  }
+  index "password_authns_account_id_key" {
+    unique  = true
+    columns = [column.account_id]
   }
 }
 schema "public" {

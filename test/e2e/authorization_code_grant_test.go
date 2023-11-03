@@ -29,14 +29,14 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 	t.Run("認可コードグラント", func(t *testing.T) {
 		t.Parallel()
 
-		username := uuid.NewString()
+		name := uuid.NewString()
 
 		email := fmt.Sprintf("%s@example.com", uuid.NewString())
 
 		password := uuid.NewString()
 
 		req := api.IdPSignupRequestSchema{
-			Username: username,
+			Name:     name,
 			Email:    email,
 			Password: password,
 		}
@@ -101,7 +101,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 		form := url.Values{}
 		form.Set("id", resp.Header.Get("X-Request-Id"))
-		form.Set("username", username)
+		form.Set("email", email)
 		form.Set("password", password)
 
 		res, err := http.Post(fmt.Sprintf("%s/op/login", endpoint), "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
@@ -117,14 +117,14 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 	t.Run("許可されていないscopeにより失敗", func(t *testing.T) {
 		t.Parallel()
 
-		username := uuid.NewString()
+		name := uuid.NewString()
 
 		email := fmt.Sprintf("%s@example.com", uuid.NewString())
 
 		password := uuid.NewString()
 
 		req := api.IdPSignupRequestSchema{
-			Username: username,
+			Name:     name,
 			Email:    email,
 			Password: password,
 		}
@@ -172,14 +172,14 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 	t.Run("登録されていないredirect_uriにより失敗", func(t *testing.T) {
 		t.Parallel()
 
-		username := uuid.NewString()
+		name := uuid.NewString()
 
 		email := fmt.Sprintf("%s@example.com", uuid.NewString())
 
 		password := uuid.NewString()
 
 		req := api.IdPSignupRequestSchema{
-			Username: username,
+			Name:     name,
 			Email:    email,
 			Password: password,
 		}
@@ -227,14 +227,14 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 	t.Run("許可されていないclient_idにより失敗", func(t *testing.T) {
 		t.Parallel()
 
-		username := uuid.NewString()
+		name := uuid.NewString()
 
 		email := fmt.Sprintf("%s@example.com", uuid.NewString())
 
 		password := uuid.NewString()
 
 		req := api.IdPSignupRequestSchema{
-			Username: username,
+			Name:     name,
 			Email:    email,
 			Password: password,
 		}

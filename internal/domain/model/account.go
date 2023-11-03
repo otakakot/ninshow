@@ -9,14 +9,14 @@ import (
 
 type Account struct {
 	ID       string
-	Username string
+	Name     string
 	Email    string
 	Password string
 	HashPass []byte
 }
 
 func SingupAccount(
-	username string,
+	name string,
 	email string,
 	password string,
 ) (*Account, error) {
@@ -27,7 +27,7 @@ func SingupAccount(
 
 	return &Account{
 		ID:       uuid.NewString(),
-		Username: username,
+		Name:     name,
 		Email:    email,
 		Password: password,
 		HashPass: hash,

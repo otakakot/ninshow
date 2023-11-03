@@ -11,14 +11,14 @@ type IdentityProvider interface {
 
 type IdentityProviderSignupInput struct {
 	Email    string
-	Username string
+	Name     string
 	Password string
 }
 
 type IdentityProviderSignupOutput struct{}
 
 type IdentityProviderSigninInput struct {
-	Username string
+	Email    string
 	Password string
 }
 

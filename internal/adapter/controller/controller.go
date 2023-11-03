@@ -66,11 +66,11 @@ func (ctl *Controller) IdpSignup(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	slog.Info("signup", "username", req.Value.Username, "password", req.Value.Password)
+	slog.Info("signup", "email", req.Value.Email, "password", req.Value.Password)
 
 	if _, err := ctl.idp.Signup(ctx, usecase.IdentityProviderSignupInput{
 		Email:    req.Value.Email,
-		Username: req.Value.Username,
+		Name:     req.Value.Name,
 		Password: req.Value.Password,
 	}); err != nil {
 		slog.WarnContext(ctx, err.Error())
@@ -90,7 +90,7 @@ func (ctl *Controller) IdpSignin(
 	defer end()
 
 	if _, err := ctl.idp.Signin(ctx, usecase.IdentityProviderSigninInput{
-		Username: req.Value.Username,
+		Email:    req.Value.Email,
 		Password: req.Value.Password,
 	}); err != nil {
 		slog.WarnContext(ctx, err.Error())
@@ -209,7 +209,7 @@ func (ctl *Controller) OpLogin(
 
 	output, err := ctl.op.Login(ctx, usecase.OpenIDProviderLoginInput{
 		ID:          req.ID,
-		Username:    req.Username,
+		Email:       req.Email,
 		Password:    req.Password,
 		CallbackURL: fmt.Sprintf("%s/op/callback", ctl.config.SelfEndpoint()),
 	})

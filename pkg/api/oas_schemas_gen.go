@@ -35,15 +35,15 @@ func (*HealthOK) healthRes() {}
 
 // Ref: #/components/schemas/IdPSigninRequestSchema
 type IdPSigninRequestSchema struct {
-	// Username.
-	Username string `json:"username"`
+	// Email.
+	Email string `json:"email"`
 	// Password.
 	Password string `json:"password"`
 }
 
-// GetUsername returns the value of Username.
-func (s *IdPSigninRequestSchema) GetUsername() string {
-	return s.Username
+// GetEmail returns the value of Email.
+func (s *IdPSigninRequestSchema) GetEmail() string {
+	return s.Email
 }
 
 // GetPassword returns the value of Password.
@@ -51,9 +51,9 @@ func (s *IdPSigninRequestSchema) GetPassword() string {
 	return s.Password
 }
 
-// SetUsername sets the value of Username.
-func (s *IdPSigninRequestSchema) SetUsername(val string) {
-	s.Username = val
+// SetEmail sets the value of Email.
+func (s *IdPSigninRequestSchema) SetEmail(val string) {
+	s.Email = val
 }
 
 // SetPassword sets the value of Password.
@@ -63,16 +63,17 @@ func (s *IdPSigninRequestSchema) SetPassword(val string) {
 
 // Ref: #/components/schemas/IdPSignupRequestSchema
 type IdPSignupRequestSchema struct {
-	// Username.
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	// Name.
+	Name string `json:"name"`
+	// Email.
+	Email string `json:"email"`
 	// Password.
 	Password string `json:"password"`
 }
 
-// GetUsername returns the value of Username.
-func (s *IdPSignupRequestSchema) GetUsername() string {
-	return s.Username
+// GetName returns the value of Name.
+func (s *IdPSignupRequestSchema) GetName() string {
+	return s.Name
 }
 
 // GetEmail returns the value of Email.
@@ -85,9 +86,9 @@ func (s *IdPSignupRequestSchema) GetPassword() string {
 	return s.Password
 }
 
-// SetUsername sets the value of Username.
-func (s *IdPSignupRequestSchema) SetUsername(val string) {
-	s.Username = val
+// SetName sets the value of Name.
+func (s *IdPSignupRequestSchema) SetName(val string) {
+	s.Name = val
 }
 
 // SetEmail sets the value of Email.
@@ -224,8 +225,8 @@ func (*OPJWKSetResponseSchema) opCertsRes() {}
 type OPLoginRequestSchema struct {
 	// Id.
 	ID string `json:"id"`
-	// Username.
-	Username string `json:"username"`
+	// Email.
+	Email string `json:"email"`
 	// Password.
 	Password string `json:"password"`
 }
@@ -235,9 +236,9 @@ func (s *OPLoginRequestSchema) GetID() string {
 	return s.ID
 }
 
-// GetUsername returns the value of Username.
-func (s *OPLoginRequestSchema) GetUsername() string {
-	return s.Username
+// GetEmail returns the value of Email.
+func (s *OPLoginRequestSchema) GetEmail() string {
+	return s.Email
 }
 
 // GetPassword returns the value of Password.
@@ -250,9 +251,9 @@ func (s *OPLoginRequestSchema) SetID(val string) {
 	s.ID = val
 }
 
-// SetUsername sets the value of Username.
-func (s *OPLoginRequestSchema) SetUsername(val string) {
-	s.Username = val
+// SetEmail sets the value of Email.
+func (s *OPLoginRequestSchema) SetEmail(val string) {
+	s.Email = val
 }
 
 // SetPassword sets the value of Password.

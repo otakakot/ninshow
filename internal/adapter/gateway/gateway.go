@@ -31,15 +31,51 @@ func (ac *Account) Save(
 	ctx context.Context,
 	account model.Account,
 ) error {
-	query := `INSERT INTO accounts (id, email, username, password) VALUES ($1, $2, $3, $4)`
-
-	stmt, err := ac.rdb.Client.Prepare(query)
+	tx, err := ac.rdb.Client.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	query := `INSERT INTO accounts (id, email, name) VALUES ($1, $2, $3)`
+
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 
-	if _, err := stmt.ExecContext(ctx, account.ID, account.Email, account.Username, account.HashPass); err != nil {
+	if _, err := stmt.ExecContext(ctx, account.ID, account.Email, account.Name); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
 		return fmt.Errorf("failed to execute statement: %w", err)
+	}
+
+	query = `INSERT INTO password_authns (value, account_id) VALUES ($1, $2)`
+
+	stmt, err = tx.Prepare(query)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+
+	if _, err := stmt.ExecContext(ctx, account.HashPass, account.ID); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
+		return fmt.Errorf("failed to execute statement: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -50,12 +86,12 @@ func (ac *Account) Find(
 	ctx context.Context,
 	id string,
 ) (*model.Account, error) {
-	query := `SELECT id, email, username, password FROM accounts WHERE id = $1`
+	query := `SELECT id, email, name FROM accounts WHERE id = $1`
 
 	row := ac.rdb.Client.QueryRowContext(ctx, query, id)
 
 	var account model.Account
-	if err := row.Scan(&account.ID, &account.Email, &account.Username, &account.HashPass); err != nil {
+	if err := row.Scan(&account.ID, &account.Email, &account.Name); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("account not found")
 		}
@@ -66,17 +102,17 @@ func (ac *Account) Find(
 	return &account, nil
 }
 
-// FindByUsername implements repository.Account.
-func (ac *Account) FindByUsername(
+// FindByEmail implements repository.Account.
+func (ac *Account) FindByEmail(
 	ctx context.Context,
-	username string,
+	email string,
 ) (*model.Account, error) {
-	query := `SELECT id, email, username, password FROM accounts WHERE username = $1`
+	query := `SELECT id, email, name FROM accounts WHERE email = $1`
 
-	row := ac.rdb.Client.QueryRowContext(ctx, query, username)
+	row := ac.rdb.Client.QueryRowContext(ctx, query, email)
 
 	var account model.Account
-	if err := row.Scan(&account.ID, &account.Email, &account.Username, &account.HashPass); err != nil {
+	if err := row.Scan(&account.ID, &account.Email, &account.Name); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("account not found")
 		}
@@ -85,6 +121,27 @@ func (ac *Account) FindByUsername(
 	}
 
 	return &account, nil
+}
+
+// FindPassword implements repository.Account.
+func (ac *Account) FindPassword(
+	ctx context.Context,
+	accountID string,
+) ([]byte, error) {
+	query := `SELECT value FROM password_authns WHERE account_id = $1`
+
+	row := ac.rdb.Client.QueryRowContext(ctx, query, accountID)
+
+	var hashPass []byte
+	if err := row.Scan(&hashPass); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("account not found")
+		}
+
+		return nil, fmt.Errorf("failed to scan row: %w", err)
+	}
+
+	return hashPass, nil
 }
 
 var _ repository.OIDCClient = (*OIDCClient)(nil)
@@ -106,12 +163,12 @@ func (oc *OIDCClient) Find(
 	ctx context.Context,
 	id string,
 ) (*model.OIDCClient, error) {
-	query := `SELECT id, secret, name, redirect_uri FROM oidc_clients WHERE id = $1`
+	query := `SELECT id, name, redirect_uri FROM oidc_clients WHERE id = $1`
 
 	row := oc.rdb.Client.QueryRowContext(ctx, query, id)
 
 	var oidcClient model.OIDCClient
-	if err := row.Scan(&oidcClient.ID, &oidcClient.HashSec, &oidcClient.Name, &oidcClient.RedirectURI); err != nil {
+	if err := row.Scan(&oidcClient.ID, &oidcClient.Name, &oidcClient.RedirectURI); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("oidc client not found")
 		}
@@ -127,18 +184,75 @@ func (oc *OIDCClient) Save(
 	ctx context.Context,
 	client model.OIDCClient,
 ) error {
-	query := `INSERT INTO oidc_clients (id, secret, name, redirect_uri) VALUES ($1, $2, $3, $4)`
-
-	stmt, err := oc.rdb.Client.Prepare(query)
+	tx, err := oc.rdb.Client.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	query := `INSERT INTO oidc_clients (id, name, redirect_uri) VALUES ($1, $2, $3)`
+
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 
-	if _, err := stmt.ExecContext(ctx, client.ID, client.HashSec, client.Name, client.RedirectURI); err != nil {
+	if _, err := stmt.ExecContext(ctx, client.ID, client.Name, client.RedirectURI); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
 		return fmt.Errorf("failed to execute statement: %w", err)
 	}
 
+	query = `INSERT INTO oidc_secrets (value, client_id) VALUES ($1, $2)`
+
+	stmt, err = tx.Prepare(query)
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+
+	if _, err := stmt.ExecContext(ctx, client.HashSec, client.ID); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("failed to rollback transaction: %w", err)
+		}
+
+		return fmt.Errorf("failed to execute statement: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	return nil
+}
+
+// FindSecret implements repository.OIDCClient.
+func (oc *OIDCClient) FindSecret(
+	ctx context.Context,
+	clientID string,
+) ([]byte, error) {
+	query := `SELECT value FROM oidc_secrets WHERE client_id = $1`
+
+	row := oc.rdb.Client.QueryRowContext(ctx, query, clientID)
+
+	var hashSec []byte
+	if err := row.Scan(&hashSec); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("oidc client not found")
+		}
+
+		return nil, fmt.Errorf("failed to scan row: %w", err)
+	}
+
+	return hashSec, nil
 }
 
 var _ repository.Cache[any] = (*KVS[any])(nil)

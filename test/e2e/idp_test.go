@@ -27,7 +27,7 @@ func TestIdP(t *testing.T) {
 		t.Parallel()
 
 		req := api.IdPSignupRequestSchema{
-			Username: uuid.NewString(),
+			Name:     uuid.NewString(),
 			Email:    fmt.Sprintf("%s@example.com", uuid.NewString()),
 			Password: uuid.NewString(),
 		}
@@ -46,7 +46,7 @@ func TestIdP(t *testing.T) {
 		}
 
 		singinRes, err := cli.IdpSignin(context.Background(), api.NewOptIdPSigninRequestSchema(api.IdPSigninRequestSchema{
-			Username: req.Username,
+			Email:    req.Email,
 			Password: req.Password,
 		}))
 		if err != nil {
@@ -65,7 +65,7 @@ func TestIdP(t *testing.T) {
 		t.Parallel()
 
 		req := api.IdPSignupRequestSchema{
-			Username: uuid.NewString(),
+			Name:     uuid.NewString(),
 			Email:    fmt.Sprintf("%s@example.com", uuid.NewString()),
 			Password: uuid.NewString(),
 		}
@@ -84,7 +84,7 @@ func TestIdP(t *testing.T) {
 		}
 
 		singinRes, err := cli.IdpSignin(context.Background(), api.NewOptIdPSigninRequestSchema(api.IdPSigninRequestSchema{
-			Username: req.Username,
+			Email:    req.Email,
 			Password: "password",
 		}))
 		if err != nil {

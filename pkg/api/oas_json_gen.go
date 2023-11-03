@@ -23,8 +23,8 @@ func (s *IdPSigninRequestSchema) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *IdPSigninRequestSchema) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("username")
-		e.Str(s.Username)
+		e.FieldStart("email")
+		e.Str(s.Email)
 	}
 	{
 		e.FieldStart("password")
@@ -33,7 +33,7 @@ func (s *IdPSigninRequestSchema) encodeFields(e *jx.Encoder) {
 }
 
 var jsonFieldsNameOfIdPSigninRequestSchema = [2]string{
-	0: "username",
+	0: "email",
 	1: "password",
 }
 
@@ -46,17 +46,17 @@ func (s *IdPSigninRequestSchema) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "username":
+		case "email":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				v, err := d.Str()
-				s.Username = string(v)
+				s.Email = string(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"username\"")
+				return errors.Wrap(err, "decode field \"email\"")
 			}
 		case "password":
 			requiredBitSet[0] |= 1 << 1
@@ -136,8 +136,8 @@ func (s *IdPSignupRequestSchema) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *IdPSignupRequestSchema) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("username")
-		e.Str(s.Username)
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		e.FieldStart("email")
@@ -150,7 +150,7 @@ func (s *IdPSignupRequestSchema) encodeFields(e *jx.Encoder) {
 }
 
 var jsonFieldsNameOfIdPSignupRequestSchema = [3]string{
-	0: "username",
+	0: "name",
 	1: "email",
 	2: "password",
 }
@@ -164,17 +164,17 @@ func (s *IdPSignupRequestSchema) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "username":
+		case "name":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				v, err := d.Str()
-				s.Username = string(v)
+				s.Name = string(v)
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"username\"")
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "email":
 			requiredBitSet[0] |= 1 << 1
