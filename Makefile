@@ -134,3 +134,7 @@ atlasinspect: ## import atlas schema
 schemafmt: 
 	@atlas schema fmt schema/schema.hcl
 	@(cd schema && bun run prisma format)
+
+.PHONY: doc
+doc: ## generate document
+	@bunx @redocly/cli build-docs api/openapi.yaml --output ./doc/api/index.html
