@@ -145,36 +145,7 @@ func (*OpenIDProvider) LoginVeiw(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	const tmp = `<!DOCTYPE html>
-	<html>
-		<head>
-			<meta charset="UTF-8">
-			<title>Login</title>
-		</head>
-		<body bgcolor="black" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
-			<form method="POST" action="/op/login" style="height: 200px; width: 200px;">
-
-				<input type="hidden" name="id" value="{{.ID}}">
-
-				<div style="color:white;">
-					<label for="email">Email:</label>
-					<input id="email" name="email" style="width: 100%">
-				</div>
-
-				<div style="color:white;">
-					<label for="password">Password:</label>
-					<input id="password" name="password" style="width: 100%" type="password">
-				</div>
-
-				<p style="color:red; min-height: 1rem;">{{.Error}}</p>
-
-				<button type="submit">Login</button>
-			</form>
-		</body>
-	</html>
-	`
-
-	var loginTmpl, _ = template.New("login").Parse(tmp)
+	var loginTmpl, _ = template.New("login").Parse(model.LoginVeiw)
 
 	data := &struct {
 		ID    string
