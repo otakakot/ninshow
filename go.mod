@@ -5,7 +5,7 @@ go 1.21.4
 require (
 	github.com/go-faster/errors v0.7.0
 	github.com/go-faster/jx v1.1.0
-	github.com/golang-jwt/jwt/v5 v5.1.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/ogen-go/ogen v0.79.1
