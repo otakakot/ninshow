@@ -1,6 +1,6 @@
 module github.com/otakakot/ninshow
 
-go 1.21.4
+go 1.21.5
 
 require (
 	github.com/go-faster/errors v0.7.0
