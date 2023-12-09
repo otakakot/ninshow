@@ -21,8 +21,9 @@ func NewServer(
 	handler http.Handler,
 ) *Server {
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", port),
-		Handler: handler,
+		Addr:              fmt.Sprintf(":%s", port),
+		Handler:           handler,
+		ReadHeaderTimeout: 30 * time.Second,
 	}
 
 	return &Server{

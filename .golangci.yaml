@@ -4,7 +4,7 @@ run:
     - pkg
 linters-settings:
   varnamelen:
-    min-name-length: 2
+    min-name-length: 1
 linters:
   enable-all: true
   disable:
@@ -38,12 +38,19 @@ linters:
     - contextcheck
     # disable because know how to use it
     - depguard
+    # FIXME
+    - goerr113
+    # FIXME
+    - gomnd
 issues:
   exclude-rules:
     - path: controller
       linters:
         - ireturn
         - revive
+    - path: gateway
+      linters:
+        - ireturn
     - path: _test\.go
       linters:
         - funlen

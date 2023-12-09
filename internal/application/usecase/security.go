@@ -3,7 +3,7 @@ package usecase
 import "context"
 
 type Security interface {
-	HandleBearer(context.Context, HandleBearerInput) (*HandleBearerOutput, error)
+	HandleBearer(ctx context.Context, input HandleBearerInput) (*HandleBearerOutput, error)
 }
 
 type HandleBearerInput struct {

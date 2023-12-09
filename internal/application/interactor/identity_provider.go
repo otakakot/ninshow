@@ -68,7 +68,7 @@ func (idp *IdentityProvider) Signin(
 
 	account.HashPass = hashPass
 
-	if err != account.ComparePassword(input.Password) {
+	if err := account.ComparePassword(input.Password); err != nil {
 		return nil, fmt.Errorf("failed to compare password: %w", err)
 	}
 

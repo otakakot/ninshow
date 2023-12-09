@@ -11,15 +11,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-faster/errors"
 	"github.com/google/uuid"
-	"golang.org/x/exp/slices"
-
 	"github.com/otakakot/ninshow/internal/application/usecase"
-	derror "github.com/otakakot/ninshow/internal/domain/errors"
+	"github.com/otakakot/ninshow/internal/domain/errors"
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
 	"github.com/otakakot/ninshow/pkg/log"
+	"golang.org/x/exp/slices"
 )
 
 var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
@@ -53,7 +51,8 @@ func NewOpenIDProvider(
 
 // Configuration implements usecase.OpenIDProviider.
 func (*OpenIDProvider) Configuration(
-	ctx context.Context, input usecase.OpenIDProviderConfigurationInput,
+	ctx context.Context,
+	_ usecase.OpenIDProviderConfigurationInput,
 ) (*usecase.OpenIDProviderConfigurationOutput, error) {
 	end := log.StartEnd(ctx)
 	defer end()
@@ -92,14 +91,15 @@ func (op *OpenIDProvider) Autorize(
 
 	cli, err := op.client.Find(ctx, input.ClientID)
 	if err != nil {
-		return nil, derror.ErrUnauthorizedClient
+		return nil, errors.ErrUnauthorizedClient
 	}
 
 	slog.Info(fmt.Sprintf("%+v", cli))
 
 	if cli.RedirectURI != input.RedirectURI {
 		slog.Warn(fmt.Sprintf("input: %v, got: %v", input.RedirectURI, cli.RedirectURI))
-		return nil, derror.ErrInvalidRequest
+
+		return nil, errors.ErrInvalidRequest
 	}
 
 	var buf bytes.Buffer
@@ -109,7 +109,7 @@ func (op *OpenIDProvider) Autorize(
 	id := uuid.NewString()
 
 	if err := model.ValidateScope(input.Scope); err != nil {
-		return nil, errors.Wrap(err, "invalid_scope")
+		return nil, fmt.Errorf("failed to validate scope: %w", err)
 	}
 
 	if err := op.param.Set(ctx, id, model.AuthorizeParam{
@@ -119,7 +119,7 @@ func (op *OpenIDProvider) Autorize(
 		ClientID:    input.ClientID,
 		Nonce:       input.Nonce,
 	}, time.Second); err != nil {
-		return nil, derror.ErrServerError
+		return nil, errors.ErrServerError
 	}
 
 	values := url.Values{
@@ -145,7 +145,7 @@ func (*OpenIDProvider) LoginVeiw(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	var loginTmpl, _ = template.New("login").Parse(model.LoginVeiw)
+	loginTmpl, _ := template.New("login").Parse(model.LoginVeiw)
 
 	data := &struct {
 		ID    string
@@ -187,7 +187,7 @@ func (op *OpenIDProvider) Login(
 	// FIXME: 微妙 ...
 	account.HashPass = hashPass
 
-	if err != account.ComparePassword(input.Password) {
+	if err := account.ComparePassword(input.Password); err != nil {
 		return nil, fmt.Errorf("failed to compare password: %w", err)
 	}
 
@@ -263,7 +263,7 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 
 	cli, err := op.client.Find(ctx, input.ClientID)
 	if err != nil {
-		return nil, derror.ErrUnauthorizedClient
+		return nil, errors.ErrUnauthorizedClient
 	}
 
 	hashSec, err := op.client.FindSecret(ctx, input.ClientID)
@@ -437,7 +437,7 @@ func (op *OpenIDProvider) Userinfo(
 
 // Certs implements usecase.OpenIDProviider.
 func (*OpenIDProvider) Certs(
-	ctx context.Context,
+	_ context.Context,
 	input usecase.OpenIDProviderCertsInput,
 ) (*usecase.OpenIDProviderCertsOutput, error) {
 	data := make([]byte, 8)

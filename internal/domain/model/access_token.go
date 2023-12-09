@@ -12,13 +12,11 @@ import (
 
 // ref. https://qiita.com/TakahikoKawasaki/items/970548727761f9e02bcd
 
-var (
-	AllowedScopes = []string{
-		"openid",
-		"profile",
-		"email",
-	}
-)
+var AllowedScopes = []string{
+	"openid",
+	"profile",
+	"email",
+}
 
 func ValidateScope(
 	scope []string,
@@ -40,7 +38,7 @@ type AccessToken struct {
 	Aud      string   `json:"aud"`
 	Jti      string   `json:"jti"`
 	Scope    []string `json:"scope"`
-	ClientID string   `json:"client_id"`
+	ClientID string   `json:"clientId"`
 }
 
 func GenerateAccessToken(
@@ -69,14 +67,14 @@ func (at AccessToken) JWT(
 	sign string,
 ) string {
 	claims := jwt.MapClaims{
-		"sub":       at.Sub,
-		"iss":       at.Iss,
-		"aud":       at.Aud,
-		"exp":       at.Exp,
-		"iat":       at.Iat,
-		"jti":       at.Jti,
-		"scope":     at.Scope,
-		"client_id": at.ClientID,
+		"sub":      at.Sub,
+		"iss":      at.Iss,
+		"aud":      at.Aud,
+		"exp":      at.Exp,
+		"iat":      at.Iat,
+		"jti":      at.Jti,
+		"scope":    at.Scope,
+		"clientId": at.ClientID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -99,21 +97,30 @@ func ParseAccessToken(
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		sc := claims["scope"].([]interface{})
+		sc, _ := claims["scope"].([]interface{})
 		scope := make([]string, len(sc))
+
 		for i, v := range sc {
-			scope[i] = v.(string)
+			scope[i], _ = v.(string)
 		}
 
+		iss, _ := claims["iss"].(string)
+		sub, _ := claims["sub"].(string)
+		clientID, _ := claims["clientId"].(string)
+		exp, _ := claims["exp"].(float64)
+		iat, _ := claims["iat"].(float64)
+		aud, _ := claims["aud"].(string)
+		jti, _ := claims["jti"].(string)
+
 		return AccessToken{
-			Iss:      claims["iss"].(string),
-			Sub:      claims["sub"].(string),
-			ClientID: claims["client_id"].(string),
-			Exp:      int64(claims["exp"].(float64)),
-			Iat:      int64(claims["iat"].(float64)),
+			Iss:      iss,
+			Sub:      sub,
+			ClientID: clientID,
+			Exp:      int64(exp),
+			Iat:      int64(iat),
 			Scope:    scope,
-			Aud:      claims["aud"].(string),
-			Jti:      claims["jti"].(string),
+			Aud:      aud,
+			Jti:      jti,
 		}, nil
 	} else {
 		return AccessToken{}, err

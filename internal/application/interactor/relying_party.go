@@ -166,7 +166,7 @@ func (*RelyingParty) Callback(
 	</html>
 	`
 
-	var tmpl, _ = template.New("callback").Parse(tmp)
+	tmpl, _ := template.New("callback").Parse(tmp)
 
 	data := &struct {
 		TokenType    string
@@ -200,6 +200,6 @@ type security struct {
 }
 
 // Bearer implements api.SecuritySource.
-func (sec *security) Bearer(ctx context.Context, operationName string) (api.Bearer, error) {
+func (sec *security) Bearer(_ context.Context, _ string) (api.Bearer, error) {
 	return api.Bearer{Token: sec.token}, nil
 }

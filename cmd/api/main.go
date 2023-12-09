@@ -34,7 +34,7 @@ func main() {
 	oidcCliRepo := gateway.NewOIDCClient(rdb)
 
 	// for ReryintParty
-	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
+	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient( //nolint:staticcheck
 		cfg.RelyingPartyID(),
 		"ninshow",
 		cfg.RelyingPartySecret(),
@@ -42,7 +42,7 @@ func main() {
 	))
 
 	// for NextAuth
-	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient(
+	_ = oidcCliRepo.Save(context.Background(), model.GenerateTestOIDCClient( //nolint:staticcheck
 		"f398d470-ce98-4aa9-a39c-fd25c04aa282",
 		"ninshow",
 		"ninshow",

@@ -5,8 +5,8 @@ import (
 )
 
 type IdentityProvider interface {
-	Signup(context.Context, IdentityProviderSignupInput) (*IdentityProviderSignupOutput, error)
-	Signin(context.Context, IdentityProviderSigninInput) (*IdentityProviderSigninOutput, error)
+	Signup(ctx context.Context, input IdentityProviderSignupInput) (*IdentityProviderSignupOutput, error)
+	Signin(ctx context.Context, input IdentityProviderSigninInput) (*IdentityProviderSigninOutput, error)
 }
 
 type IdentityProviderSignupInput struct {

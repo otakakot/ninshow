@@ -74,7 +74,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 		clientID := "26bf8924-c1d9-484d-8a72-db1df2b05ccd"
 
-		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		baseURL, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
 		params := url.Values{}
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
@@ -83,9 +83,9 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
-		baseUrl.RawQuery = params.Encode()
+		baseURL.RawQuery = params.Encode()
 
-		resp, err := http.Get(baseUrl.String())
+		resp, err := http.Get(baseURL.String())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -108,6 +108,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer res.Body.Close()
 
 		if res.StatusCode != http.StatusOK {
 			t.Fatalf("unexpected status code: %d", res.StatusCode)
@@ -147,7 +148,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 		clientID := "26bf8924-c1d9-484d-8a72-db1df2b05ccd"
 
-		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		baseURL, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
 		params := url.Values{}
 		params.Add("response_type", "code")
 		params.Add("scope", "openid phone") // 許可されていないscope phone を含める
@@ -156,9 +157,9 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
-		baseUrl.RawQuery = params.Encode()
+		baseURL.RawQuery = params.Encode()
 
-		resp, err := http.Get(baseUrl.String())
+		resp, err := http.Get(baseURL.String())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -202,7 +203,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 		clientID := "26bf8924-c1d9-484d-8a72-db1df2b05ccd"
 
-		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		baseURL, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
 		params := url.Values{}
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
@@ -211,9 +212,9 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
-		baseUrl.RawQuery = params.Encode()
+		baseURL.RawQuery = params.Encode()
 
-		resp, err := http.Get(baseUrl.String())
+		resp, err := http.Get(baseURL.String())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -258,7 +259,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		// 登録していないclient_idを指定
 		clientID := "0e0c59ee-7a05-4f23-a902-433c7f29a12e"
 
-		baseUrl, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
+		baseURL, _ := url.Parse(fmt.Sprintf("%s/op/authorize", endpoint))
 		params := url.Values{}
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
@@ -267,9 +268,9 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
-		baseUrl.RawQuery = params.Encode()
+		baseURL.RawQuery = params.Encode()
 
-		resp, err := http.Get(baseUrl.String())
+		resp, err := http.Get(baseURL.String())
 		if err != nil {
 			t.Fatal(err)
 		}

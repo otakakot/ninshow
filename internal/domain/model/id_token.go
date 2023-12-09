@@ -2,7 +2,7 @@ package model
 
 import (
 	"crypto/rsa"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -29,10 +29,10 @@ func GenerateIDToken(
 	nonce string,
 	profile *string,
 	email *string,
-) IDToken {
+) *IDToken {
 	now := time.Now()
 
-	idt := IDToken{
+	idt := &IDToken{
 		Iss:   iss,
 		Sub:   sub,
 		Aud:   aud,
@@ -111,17 +111,17 @@ func (it IDToken) RSA256(
 func ParseIDToken(
 	str string,
 	sign string,
-) (IDToken, error) {
+) (*IDToken, error) {
 	token, err := jwt.Parse(str, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method")
+			return nil, errors.New("unexpected signing method")
 		}
 
 		return []byte(sign), nil
 	})
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		idt := IDToken{
+		idt := &IDToken{
 			Iss:   claims["iss"].(string),
 			Sub:   claims["sub"].(string),
 			Exp:   claims["exp"].(int64),
@@ -140,6 +140,6 @@ func ParseIDToken(
 
 		return idt, nil
 	} else {
-		return IDToken{}, err
+		return nil, err
 	}
 }

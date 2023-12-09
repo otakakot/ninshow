@@ -8,20 +8,20 @@ import (
 )
 
 type Account interface {
-	Save(context.Context, model.Account) error
-	Find(context.Context, string) (*model.Account, error)
-	FindByEmail(context.Context, string) (*model.Account, error)
-	FindPassword(context.Context, string) ([]byte, error)
+	Save(ctx context.Context, account model.Account) error
+	Find(ctx context.Context, id string) (*model.Account, error)
+	FindByEmail(ctx context.Context, email string) (*model.Account, error)
+	FindPassword(ctx context.Context, id string) ([]byte, error)
 }
 
 type OIDCClient interface {
-	Save(context.Context, model.OIDCClient) error
-	Find(context.Context, string) (*model.OIDCClient, error)
-	FindSecret(context.Context, string) ([]byte, error)
+	Save(ctx context.Context, client model.OIDCClient) error
+	Find(ctx context.Context, id string) (*model.OIDCClient, error)
+	FindSecret(ctx context.Context, id string) ([]byte, error)
 }
 
 type Cache[T any] interface {
-	Set(context.Context, string, T, time.Duration) error
-	Get(context.Context, string) (T, error)
-	Del(context.Context, string) error
+	Set(ctx context.Context, key string, value T, ttl time.Duration) error
+	Get(ctx context.Context, key string) (T, error)
+	Del(ctx context.Context, key string) error
 }

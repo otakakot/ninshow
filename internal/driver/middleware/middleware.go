@@ -19,6 +19,7 @@ func Logging() middleware.Middleware {
 		next middleware.Next,
 	) (middleware.Response, error) {
 		slog.Info(fmt.Sprintf("%s %s", req.Raw.Method, req.Raw.URL))
+
 		res, err := next(req)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Error %v", err))

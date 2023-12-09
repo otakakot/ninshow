@@ -11,7 +11,6 @@ import (
 	"github.com/otakakot/ninshow/internal/application/usecase"
 	derror "github.com/otakakot/ninshow/internal/domain/errors"
 	"github.com/otakakot/ninshow/internal/domain/model"
-
 	"github.com/otakakot/ninshow/pkg/api"
 	"github.com/otakakot/ninshow/pkg/log"
 )
@@ -120,29 +119,29 @@ func (ctl *Controller) OpAuthorize(
 	})
 	if err != nil {
 		slog.Warn(err.Error())
-		if errors.Is(err, derror.ErrInvalidRequest) {
+
+		switch {
+		case errors.Is(err, derror.ErrInvalidRequest):
 			return &api.OpAuthorizeBadRequest{
 				Error: api.NewOptOpAuthorizeBadRequestError(api.OpAuthorizeBadRequestErrorInvalidRequest),
 			}, nil
-		}
-		if errors.Is(err, derror.ErrUnauthorizedClient) {
+		case errors.Is(err, derror.ErrUnauthorizedClient):
 			return &api.OpAuthorizeUnauthorized{
 				Error: api.NewOptOpAuthorizeUnauthorizedError(api.OpAuthorizeUnauthorizedErrorUnauthorizedClient),
 			}, nil
-		}
-		if errors.Is(err, derror.ErrAccessDenied) {
+		case errors.Is(err, derror.ErrAccessDenied):
 			return &api.OpAuthorizeForbidden{
 				Error: api.NewOptOpAuthorizeForbiddenError(api.OpAuthorizeForbiddenErrorAccessDenied),
 			}, nil
-		}
-		if errors.Is(err, derror.ErrInvalidScope) {
+		case errors.Is(err, derror.ErrInvalidScope):
 			return &api.OpAuthorizeBadRequest{
 				Error: api.NewOptOpAuthorizeBadRequestError(api.OpAuthorizeBadRequestErrorInvalidScope),
 			}, nil
+		default:
+			return &api.OpAuthorizeInternalServerError{
+				Error: api.NewOptOpAuthorizeInternalServerErrorError(api.OpAuthorizeInternalServerErrorErrorServerError),
+			}, err
 		}
-		return &api.OpAuthorizeInternalServerError{
-			Error: api.NewOptOpAuthorizeInternalServerErrorError(api.OpAuthorizeInternalServerErrorErrorServerError),
-		}, err
 	}
 
 	res := &api.OpAuthorizeFound{}
@@ -290,7 +289,7 @@ func (ctl *Controller) OpToken(
 			return &api.OpTokenInternalServerError{}, err
 		}
 
-		scope := make([]api.OPTokenResponseSchemaScopeItem, 3)
+		scope := make([]api.OPTokenResponseSchemaScopeItem, 0, 3)
 		for _, v := range strings.Split(req.Scope.Value, " ") {
 			scope = append(scope, api.OPTokenResponseSchemaScopeItem(v))
 		}
@@ -311,6 +310,7 @@ func (ctl *Controller) OpToken(
 		return res, nil
 	case api.OPTokenRequestSchemaGrantTypeRefreshToken:
 		scope := append(make([]string, 0, 3), strings.Split(req.Scope.Value, " ")...)
+
 		output, err := ctl.op.RefreshTkenGrant(ctx, usecase.OpenIDProviderRefreshTokenGrantInput{
 			RefreshToken:    req.RefreshToken.Value,
 			ClientID:        req.ClientID.Value,

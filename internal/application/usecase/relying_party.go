@@ -8,8 +8,8 @@ import (
 )
 
 type RelyingParty interface {
-	Login(context.Context, RelyingPartyLoginInput) (*RelyingPartyLoginOutput, error)
-	Callback(context.Context, RelyingPartyCallbackInput) (*RelyingPartyCallbackOutput, error)
+	Login(ctx context.Context, input RelyingPartyLoginInput) (*RelyingPartyLoginOutput, error)
+	Callback(ctx context.Context, input RelyingPartyCallbackInput) (*RelyingPartyCallbackOutput, error)
 }
 
 type RelyingPartyLoginInput struct {

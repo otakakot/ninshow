@@ -10,16 +10,16 @@ import (
 )
 
 type OpenIDProviider interface {
-	Configuration(context.Context, OpenIDProviderConfigurationInput) (*OpenIDProviderConfigurationOutput, error)
-	Autorize(context.Context, OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
-	LoginVeiw(context.Context, OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
-	Login(context.Context, OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
-	Callback(context.Context, OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
-	AuthorizationCodeGrant(context.Context, OpenIDProviderAuthorizationCodeGrantInput) (*OpenIDProviderAuthorizationCodeGrantOutput, error)
-	RefreshTkenGrant(context.Context, OpenIDProviderRefreshTokenGrantInput) (*OpenIDProviderRefreshTokenGrantOutput, error)
-	Userinfo(context.Context, OpenIDProviderUserinfoInput) (*OpenIDProviderUserinfoOutput, error)
-	Certs(context.Context, OpenIDProviderCertsInput) (*OpenIDProviderCertsOutput, error)
-	Revoke(context.Context, OpenIDProviderRevokeInput) (*OpenIDProviderRevokeOutput, error)
+	Configuration(ctx context.Context, input OpenIDProviderConfigurationInput) (*OpenIDProviderConfigurationOutput, error)
+	Autorize(ctx context.Context, input OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
+	LoginVeiw(ctx context.Context, input OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
+	Login(ctx context.Context, input OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
+	Callback(ctx context.Context, input OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
+	AuthorizationCodeGrant(ctx context.Context, input OpenIDProviderAuthorizationCodeGrantInput) (*OpenIDProviderAuthorizationCodeGrantOutput, error)
+	RefreshTkenGrant(ctx context.Context, input OpenIDProviderRefreshTokenGrantInput) (*OpenIDProviderRefreshTokenGrantOutput, error)
+	Userinfo(ctx context.Context, input OpenIDProviderUserinfoInput) (*OpenIDProviderUserinfoOutput, error)
+	Certs(ctx context.Context, input OpenIDProviderCertsInput) (*OpenIDProviderCertsOutput, error)
+	Revoke(ctx context.Context, input OpenIDProviderRevokeInput) (*OpenIDProviderRevokeOutput, error)
 }
 
 type OpenIDProviderConfigurationInput struct{}
