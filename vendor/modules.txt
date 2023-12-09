@@ -42,18 +42,18 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
-# github.com/ogen-go/ogen v0.79.1
+# github.com/ogen-go/ogen v0.80.1
 ## explicit; go 1.20
 github.com/ogen-go/ogen/conv
 github.com/ogen-go/ogen/http
 github.com/ogen-go/ogen/internal/httpcookie
-github.com/ogen-go/ogen/internal/jsonpointer
-github.com/ogen-go/ogen/internal/location
 github.com/ogen-go/ogen/internal/urlpath
 github.com/ogen-go/ogen/internal/xmaps
 github.com/ogen-go/ogen/internal/xslices
 github.com/ogen-go/ogen/json
+github.com/ogen-go/ogen/jsonpointer
 github.com/ogen-go/ogen/jsonschema
+github.com/ogen-go/ogen/location
 github.com/ogen-go/ogen/middleware
 github.com/ogen-go/ogen/ogenerrors
 github.com/ogen-go/ogen/ogenregex
