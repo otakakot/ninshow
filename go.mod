@@ -3,7 +3,7 @@ module github.com/otakakot/ninshow
 go 1.21.5
 
 require (
-	github.com/go-faster/errors v0.7.0
+	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.5.0
