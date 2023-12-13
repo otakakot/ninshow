@@ -22,6 +22,15 @@ func (UnimplementedHandler) Health(ctx context.Context) (r HealthRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
+// IdpOIDC implements idpOIDC operation.
+//
+// OpenID Connect.
+//
+// GET /idp/oidc
+func (UnimplementedHandler) IdpOIDC(ctx context.Context, params IdpOIDCParams) (r IdpOIDCRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // IdpSignin implements idpSignin operation.
 //
 // Sign In.

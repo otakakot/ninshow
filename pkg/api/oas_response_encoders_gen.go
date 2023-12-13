@@ -34,6 +34,50 @@ func encodeHealthResponse(response HealthRes, w http.ResponseWriter, span trace.
 	}
 }
 
+func encodeIdpOIDCResponse(response IdpOIDCRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *IdpOIDCFound:
+		// Encoding response headers.
+		{
+			h := uri.NewHeaderEncoder(w.Header())
+			// Encode "Location" header.
+			{
+				cfg := uri.HeaderParameterEncodingConfig{
+					Name:    "Location",
+					Explode: false,
+				}
+				if err := h.EncodeParam(cfg, func(e uri.Encoder) error {
+					if val, ok := response.Location.Get(); ok {
+						return e.EncodeValue(conv.URLToString(val))
+					}
+					return nil
+				}); err != nil {
+					return errors.Wrap(err, "encode Location header")
+				}
+			}
+		}
+		w.WriteHeader(302)
+		span.SetStatus(codes.Ok, http.StatusText(302))
+
+		return nil
+
+	case *IdpOIDCBadRequest:
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		return nil
+
+	case *IdpOIDCInternalServerError:
+		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
 func encodeIdpSigninResponse(response IdpSigninRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *IdpSigninOK:
@@ -106,7 +150,7 @@ func encodeOpAuthorizeResponse(response OpAuthorizeRes, w http.ResponseWriter, s
 		return nil
 
 	case *OpAuthorizeBadRequest:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
 
@@ -119,7 +163,7 @@ func encodeOpAuthorizeResponse(response OpAuthorizeRes, w http.ResponseWriter, s
 		return nil
 
 	case *OpAuthorizeUnauthorized:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(401)
 		span.SetStatus(codes.Error, http.StatusText(401))
 
@@ -132,7 +176,7 @@ func encodeOpAuthorizeResponse(response OpAuthorizeRes, w http.ResponseWriter, s
 		return nil
 
 	case *OpAuthorizeForbidden:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
 
@@ -145,7 +189,7 @@ func encodeOpAuthorizeResponse(response OpAuthorizeRes, w http.ResponseWriter, s
 		return nil
 
 	case *OpAuthorizeInternalServerError:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
 
@@ -203,7 +247,7 @@ func encodeOpCallbackResponse(response OpCallbackRes, w http.ResponseWriter, spa
 func encodeOpCertsResponse(response OpCertsRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *OPJWKSetResponseSchema:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -267,7 +311,7 @@ func encodeOpLoginResponse(response OpLoginRes, w http.ResponseWriter, span trac
 func encodeOpLoginViewResponse(response OpLoginViewRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *OpLoginViewOKHeaders:
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		// Encoding response headers.
 		{
 			h := uri.NewHeaderEncoder(w.Header())
@@ -311,7 +355,7 @@ func encodeOpLoginViewResponse(response OpLoginViewRes, w http.ResponseWriter, s
 func encodeOpOpenIDConfigurationResponse(response OpOpenIDConfigurationRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *OPOpenIDConfigurationResponseSchema:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -343,7 +387,7 @@ func encodeOpRevokeResponse(response OpRevokeRes, w http.ResponseWriter, span tr
 		return nil
 
 	case *OpRevokeBadRequest:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
 
@@ -369,7 +413,7 @@ func encodeOpRevokeResponse(response OpRevokeRes, w http.ResponseWriter, span tr
 func encodeOpTokenResponse(response OpTokenRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *OPTokenResponseSchemaHeaders:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		// Encoding response headers.
 		{
 			h := uri.NewHeaderEncoder(w.Header())
@@ -416,7 +460,7 @@ func encodeOpTokenResponse(response OpTokenRes, w http.ResponseWriter, span trac
 		return nil
 
 	case *OpTokenBadRequest:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
 
@@ -442,7 +486,7 @@ func encodeOpTokenResponse(response OpTokenRes, w http.ResponseWriter, span trac
 func encodeOpUserinfoResponse(response OpUserinfoRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *OPUserInfoResponseSchema:
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -468,7 +512,7 @@ func encodeOpUserinfoResponse(response OpUserinfoRes, w http.ResponseWriter, spa
 func encodeRpCallbackResponse(response RpCallbackRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
 	case *RpCallbackOK:
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
 

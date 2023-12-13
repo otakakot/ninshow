@@ -11,6 +11,10 @@ import (
 )
 
 func (s *IdPSigninRequestSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.String{
@@ -38,6 +42,10 @@ func (s *IdPSigninRequestSchema) Validate() error {
 }
 
 func (s *IdPSignupRequestSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.String{
@@ -64,7 +72,20 @@ func (s *IdPSignupRequestSchema) Validate() error {
 	return nil
 }
 
+func (s IdpOIDCOp) Validate() error {
+	switch s {
+	case "zitadel":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *OPJWKSetResponseSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Keys == nil {
@@ -84,6 +105,10 @@ func (s *OPJWKSetResponseSchema) Validate() error {
 }
 
 func (s *OPLoginRequestSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.String{
@@ -111,6 +136,10 @@ func (s *OPLoginRequestSchema) Validate() error {
 }
 
 func (s *OPRevokeRequestSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.TokenTypeHint.Get(); ok {
@@ -148,6 +177,10 @@ func (s OPRevokeRequestSchemaTokenTypeHint) Validate() error {
 }
 
 func (s *OPTokenRequestSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.GrantType.Validate(); err != nil {
@@ -178,6 +211,10 @@ func (s OPTokenRequestSchemaGrantType) Validate() error {
 }
 
 func (s *OPTokenResponseSchema) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError
@@ -211,6 +248,10 @@ func (s *OPTokenResponseSchema) Validate() error {
 }
 
 func (s *OPTokenResponseSchemaHeaders) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Response.Validate(); err != nil {
@@ -243,6 +284,10 @@ func (s OPTokenResponseSchemaScopeItem) Validate() error {
 }
 
 func (s *OpAuthorizeBadRequest) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Error.Get(); ok {
@@ -280,6 +325,10 @@ func (s OpAuthorizeBadRequestError) Validate() error {
 }
 
 func (s *OpAuthorizeForbidden) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Error.Get(); ok {
@@ -315,6 +364,10 @@ func (s OpAuthorizeForbiddenError) Validate() error {
 }
 
 func (s *OpAuthorizeInternalServerError) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Error.Get(); ok {
@@ -359,6 +412,10 @@ func (s OpAuthorizeResponseType) Validate() error {
 }
 
 func (s *OpAuthorizeUnauthorized) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Error.Get(); ok {

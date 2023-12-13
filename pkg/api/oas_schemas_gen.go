@@ -101,6 +101,67 @@ func (s *IdPSignupRequestSchema) SetPassword(val string) {
 	s.Password = val
 }
 
+// IdpOIDCBadRequest is response for IdpOIDC operation.
+type IdpOIDCBadRequest struct{}
+
+func (*IdpOIDCBadRequest) idpOIDCRes() {}
+
+// IdpOIDCFound is response for IdpOIDC operation.
+type IdpOIDCFound struct {
+	Location OptURI
+}
+
+// GetLocation returns the value of Location.
+func (s *IdpOIDCFound) GetLocation() OptURI {
+	return s.Location
+}
+
+// SetLocation sets the value of Location.
+func (s *IdpOIDCFound) SetLocation(val OptURI) {
+	s.Location = val
+}
+
+func (*IdpOIDCFound) idpOIDCRes() {}
+
+// IdpOIDCInternalServerError is response for IdpOIDC operation.
+type IdpOIDCInternalServerError struct{}
+
+func (*IdpOIDCInternalServerError) idpOIDCRes() {}
+
+type IdpOIDCOp string
+
+const (
+	IdpOIDCOpZitadel IdpOIDCOp = "zitadel"
+)
+
+// AllValues returns all IdpOIDCOp values.
+func (IdpOIDCOp) AllValues() []IdpOIDCOp {
+	return []IdpOIDCOp{
+		IdpOIDCOpZitadel,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s IdpOIDCOp) MarshalText() ([]byte, error) {
+	switch s {
+	case IdpOIDCOpZitadel:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *IdpOIDCOp) UnmarshalText(data []byte) error {
+	switch IdpOIDCOp(data) {
+	case IdpOIDCOpZitadel:
+		*s = IdpOIDCOpZitadel
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // IdpSigninInternalServerError is response for IdpSignin operation.
 type IdpSigninInternalServerError struct{}
 

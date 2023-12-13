@@ -30,6 +30,12 @@ type Invoker interface {
 	//
 	// GET /health
 	Health(ctx context.Context) (HealthRes, error)
+	// IdpOIDC invokes idpOIDC operation.
+	//
+	// OpenID Connect.
+	//
+	// GET /idp/oidc
+	IdpOIDC(ctx context.Context, params IdpOIDCParams) (IdpOIDCRes, error)
 	// IdpSignin invokes idpSignin operation.
 	//
 	// Sign In.
@@ -235,6 +241,96 @@ func (c *Client) sendHealth(ctx context.Context) (res HealthRes, err error) {
 	return result, nil
 }
 
+// IdpOIDC invokes idpOIDC operation.
+//
+// OpenID Connect.
+//
+// GET /idp/oidc
+func (c *Client) IdpOIDC(ctx context.Context, params IdpOIDCParams) (IdpOIDCRes, error) {
+	res, err := c.sendIdpOIDC(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendIdpOIDC(ctx context.Context, params IdpOIDCParams) (res IdpOIDCRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("idpOIDC"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/idp/oidc"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "IdpOIDC",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/idp/oidc"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "op" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "op",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(string(params.Op)))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeIdpOIDCResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // IdpSignin invokes idpSignin operation.
 //
 // Sign In.
@@ -250,22 +346,6 @@ func (c *Client) sendIdpSignin(ctx context.Context, request OptIdPSigninRequestS
 		otelogen.OperationID("idpSignin"),
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/idp/signin"),
-	}
-	// Validate request before sending.
-	if err := func() error {
-		if value, ok := request.Get(); ok {
-			if err := func() error {
-				if err := value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
 	}
 
 	// Run stopwatch.
@@ -341,22 +421,6 @@ func (c *Client) sendIdpSignup(ctx context.Context, request OptIdPSignupRequestS
 		otelogen.OperationID("idpSignup"),
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/idp/signup"),
-	}
-	// Validate request before sending.
-	if err := func() error {
-		if value, ok := request.Get(); ok {
-			if err := func() error {
-				if err := value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
 	}
 
 	// Run stopwatch.
@@ -762,15 +826,6 @@ func (c *Client) sendOpLogin(ctx context.Context, request *OPLoginRequestSchema)
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/op/login"),
 	}
-	// Validate request before sending.
-	if err := func() error {
-		if err := request.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
-	}
 
 	// Run stopwatch.
 	startTime := time.Now()
@@ -1008,15 +1063,6 @@ func (c *Client) sendOpRevoke(ctx context.Context, request *OPRevokeRequestSchem
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/op/revoke"),
 	}
-	// Validate request before sending.
-	if err := func() error {
-		if err := request.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
-	}
 
 	// Run stopwatch.
 	startTime := time.Now()
@@ -1126,15 +1172,6 @@ func (c *Client) sendOpToken(ctx context.Context, request *OPTokenRequestSchema)
 		otelogen.OperationID("opToken"),
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/op/token"),
-	}
-	// Validate request before sending.
-	if err := func() error {
-		if err := request.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
 	}
 
 	// Run stopwatch.

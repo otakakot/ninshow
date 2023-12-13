@@ -100,6 +100,14 @@ func (ctl *Controller) IdpSignin(
 	return &api.IdpSigninOK{}, nil
 }
 
+// IdpOIDC implements api.Handler.
+func (ctl *Controller) IdpOIDC(
+	ctx context.Context,
+	params api.IdpOIDCParams,
+) (api.IdpOIDCRes, error) {
+	panic("unimplemented")
+}
+
 // OpAuthorize implements api.Handler.
 func (ctl *Controller) OpAuthorize(
 	ctx context.Context,

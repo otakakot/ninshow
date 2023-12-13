@@ -13,6 +13,72 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+// IdpOIDCParams is parameters of idpOIDC operation.
+type IdpOIDCParams struct {
+	// Op.
+	Op IdpOIDCOp
+}
+
+func unpackIdpOIDCParams(packed middleware.Parameters) (params IdpOIDCParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "op",
+			In:   "query",
+		}
+		params.Op = packed[key].(IdpOIDCOp)
+	}
+	return params
+}
+
+func decodeIdpOIDCParams(args [0]string, argsEscaped bool, r *http.Request) (params IdpOIDCParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: op.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "op",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Op = IdpOIDCOp(c)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if err := params.Op.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "op",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // OpAuthorizeParams is parameters of opAuthorize operation.
 type OpAuthorizeParams struct {
 	// Response_type.

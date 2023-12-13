@@ -77,8 +77,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 					return
 				}
-			case 'i': // Prefix: "idp/sign"
-				if l := len("idp/sign"); len(elem) >= l && elem[0:l] == "idp/sign" {
+			case 'i': // Prefix: "idp/"
+				if l := len("idp/"); len(elem) >= l && elem[0:l] == "idp/" {
 					elem = elem[l:]
 				} else {
 					break
@@ -88,8 +88,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case 'i': // Prefix: "in"
-					if l := len("in"); len(elem) >= l && elem[0:l] == "in" {
+				case 'o': // Prefix: "oidc"
+					if l := len("oidc"); len(elem) >= l && elem[0:l] == "oidc" {
 						elem = elem[l:]
 					} else {
 						break
@@ -98,31 +98,61 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if len(elem) == 0 {
 						// Leaf node.
 						switch r.Method {
-						case "POST":
-							s.handleIdpSigninRequest([0]string{}, elemIsEscaped, w, r)
+						case "GET":
+							s.handleIdpOIDCRequest([0]string{}, elemIsEscaped, w, r)
 						default:
-							s.notAllowed(w, r, "POST")
+							s.notAllowed(w, r, "GET")
 						}
 
 						return
 					}
-				case 'u': // Prefix: "up"
-					if l := len("up"); len(elem) >= l && elem[0:l] == "up" {
+				case 's': // Prefix: "sign"
+					if l := len("sign"); len(elem) >= l && elem[0:l] == "sign" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						// Leaf node.
-						switch r.Method {
-						case "POST":
-							s.handleIdpSignupRequest([0]string{}, elemIsEscaped, w, r)
-						default:
-							s.notAllowed(w, r, "POST")
+						break
+					}
+					switch elem[0] {
+					case 'i': // Prefix: "in"
+						if l := len("in"); len(elem) >= l && elem[0:l] == "in" {
+							elem = elem[l:]
+						} else {
+							break
 						}
 
-						return
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "POST":
+								s.handleIdpSigninRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "POST")
+							}
+
+							return
+						}
+					case 'u': // Prefix: "up"
+						if l := len("up"); len(elem) >= l && elem[0:l] == "up" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "POST":
+								s.handleIdpSignupRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "POST")
+							}
+
+							return
+						}
 					}
 				}
 			case 'o': // Prefix: "op/"
@@ -457,8 +487,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						return
 					}
 				}
-			case 'i': // Prefix: "idp/sign"
-				if l := len("idp/sign"); len(elem) >= l && elem[0:l] == "idp/sign" {
+			case 'i': // Prefix: "idp/"
+				if l := len("idp/"); len(elem) >= l && elem[0:l] == "idp/" {
 					elem = elem[l:]
 				} else {
 					break
@@ -468,8 +498,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case 'i': // Prefix: "in"
-					if l := len("in"); len(elem) >= l && elem[0:l] == "in" {
+				case 'o': // Prefix: "oidc"
+					if l := len("oidc"); len(elem) >= l && elem[0:l] == "oidc" {
 						elem = elem[l:]
 					} else {
 						break
@@ -477,12 +507,12 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 					if len(elem) == 0 {
 						switch method {
-						case "POST":
-							// Leaf: IdpSignin
-							r.name = "IdpSignin"
-							r.summary = "Sign In"
-							r.operationID = "idpSignin"
-							r.pathPattern = "/idp/signin"
+						case "GET":
+							// Leaf: IdpOIDC
+							r.name = "IdpOIDC"
+							r.summary = "OpenID Connect"
+							r.operationID = "idpOIDC"
+							r.pathPattern = "/idp/oidc"
 							r.args = args
 							r.count = 0
 							return r, true
@@ -490,26 +520,60 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							return
 						}
 					}
-				case 'u': // Prefix: "up"
-					if l := len("up"); len(elem) >= l && elem[0:l] == "up" {
+				case 's': // Prefix: "sign"
+					if l := len("sign"); len(elem) >= l && elem[0:l] == "sign" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						switch method {
-						case "POST":
-							// Leaf: IdpSignup
-							r.name = "IdpSignup"
-							r.summary = "Sign Up"
-							r.operationID = "idpSignup"
-							r.pathPattern = "/idp/signup"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
+						break
+					}
+					switch elem[0] {
+					case 'i': // Prefix: "in"
+						if l := len("in"); len(elem) >= l && elem[0:l] == "in" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "POST":
+								// Leaf: IdpSignin
+								r.name = "IdpSignin"
+								r.summary = "Sign In"
+								r.operationID = "idpSignin"
+								r.pathPattern = "/idp/signin"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+					case 'u': // Prefix: "up"
+						if l := len("up"); len(elem) >= l && elem[0:l] == "up" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "POST":
+								// Leaf: IdpSignup
+								r.name = "IdpSignup"
+								r.summary = "Sign Up"
+								r.operationID = "idpSignup"
+								r.pathPattern = "/idp/signup"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
 						}
 					}
 				}
