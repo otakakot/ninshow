@@ -3,7 +3,7 @@ services:
     container_name: ${APP_NAME}-postgres
     image: postgres:15.5-alpine
     ports:
-      - ${POSTGRES_PORT}:5432
+      - 5432:5432
     environment:
       TZ: UTC
       LANG: ja_JP.UTF-8
@@ -13,20 +13,48 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
       POSTGRES_HOST_AUTH_METHOD: trust
     restart: always
-  api:
-    container_name: ${APP_NAME}-api
+  ninshow:
+    container_name: ${APP_NAME}-ninshow
     build:
       context: .
       dockerfile: Dockerfile
       args:
         - workdir=cmd/api
     ports:
-      - ${API_PORT}:8080
+      - 5555:5555
     environment:
       ENV: local
-      PORT: 8080
+      PORT: 5555
       DSN: postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
     volumes:
       - ../:/app
     restart: always
-  
+  zitadel:
+    container_name: ${APP_NAME}-zitadel
+    restart: always
+    image: ghcr.io/zitadel/zitadel:v2.41.8
+    command: 'start-from-init --masterkey "MasterkeyNeedsToHave32Characters" --tlsMode disabled'
+    environment:
+      - 'ZITADEL_DATABASE_COCKROACH_HOST=cockroachdb'
+      - 'ZITADEL_EXTERNALSECURE=false'
+      - 'ZITADEL_USERNAME=zitadel-admin@zitadel.localhost'
+      - 'ZITADEL_PASSWORD=Password1!'
+    depends_on:
+      cockroachdb:
+        condition: 'service_healthy'
+    ports:
+      - 8080:8080
+  cockroachdb:
+    container_name: ${APP_NAME}-cockroachdb
+    restart: always
+    image: cockroachdb/cockroach:v23.1.13
+    command: 'start-single-node --insecure'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 20s
+    ports:
+      - 9090:8080
+      - 26257:26257

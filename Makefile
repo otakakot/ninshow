@@ -1,5 +1,7 @@
+SHELL := /bin/bash
 include .env
 export
+export APP_NAME := $(basename $(notdir $(shell pwd)))
 
 .PHONY: help
 help: ## display this help screen

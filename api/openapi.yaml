@@ -3,7 +3,7 @@ info:
   title: NinShow APP
   description: |-
     This is the NinShow APP API documentation.
-  termsOfService: https://localhost:8080
+  termsOfService: https://localhost:5555
   contact:
     email: kotaro.otaka@example.com
   license:
@@ -13,7 +13,7 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:5555
 tags:
   - name: Health
     description: Health
