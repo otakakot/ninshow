@@ -190,7 +190,7 @@ type OpAuthorizeParams struct {
 	Scope string
 	// Client_id.
 	ClientID url.URL
-	// Http://localhost:8080/rp/callback.
+	// Http://localhost:5555/rp/callback.
 	RedirectURI url.URL
 	// State.
 	State OptString
@@ -608,7 +608,8 @@ type RpCallbackParams struct {
 	// Code.
 	Code string
 	// State.
-	State string
+	QueryState  string
+	CookieState string
 }
 
 func unpackRpCallbackParams(packed middleware.Parameters) (params RpCallbackParams) {
@@ -624,13 +625,21 @@ func unpackRpCallbackParams(packed middleware.Parameters) (params RpCallbackPara
 			Name: "state",
 			In:   "query",
 		}
-		params.State = packed[key].(string)
+		params.QueryState = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "state",
+			In:   "cookie",
+		}
+		params.CookieState = packed[key].(string)
 	}
 	return params
 }
 
 func decodeRpCallbackParams(args [0]string, argsEscaped bool, r *http.Request) (params RpCallbackParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
+	c := uri.NewCookieDecoder(r)
 	// Decode query: code.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
@@ -687,7 +696,7 @@ func decodeRpCallbackParams(args [0]string, argsEscaped bool, r *http.Request) (
 					return err
 				}
 
-				params.State = c
+				params.QueryState = c
 				return nil
 			}); err != nil {
 				return err
@@ -700,6 +709,40 @@ func decodeRpCallbackParams(args [0]string, argsEscaped bool, r *http.Request) (
 		return params, &ogenerrors.DecodeParamError{
 			Name: "state",
 			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode cookie: state.
+	if err := func() error {
+		cfg := uri.CookieParameterDecodingConfig{
+			Name:    "state",
+			Explode: true,
+		}
+		if err := c.HasParam(cfg); err == nil {
+			if err := c.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.CookieState = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "state",
+			In:   "cookie",
 			Err:  err,
 		}
 	}

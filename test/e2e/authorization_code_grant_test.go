@@ -59,7 +59,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 		// NOTE: http.Get は 302 が返ってくるとリダイレクトしてくれるらしい
 		// NOTE: ogen は上記想定が考慮できていないためうまくレスポンスをデコードできない
-		// redirectURI, _ := url.ParseRequestURI("http://localhost:8080")
+		// redirectURI, _ := url.ParseRequestURI("http://localhost:5555")
 		// res, err := cli.OpAuthorize(context.Background(), api.OpAuthorizeParams{
 		// 	ResponseType: "code",
 		// 	Scope:        "openid",
@@ -79,13 +79,23 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
 		params.Add("client_id", clientID)
-		params.Add("redirect_uri", "http://localhost:8080/rp/callback")
+		params.Add("redirect_uri", fmt.Sprintf("%s/rp/callback", endpoint))
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
 		baseURL.RawQuery = params.Encode()
 
-		resp, err := http.Get(baseURL.String())
+		rqst, err := http.NewRequest(http.MethodGet, baseURL.String(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rqst.AddCookie(&http.Cookie{
+			Name:  "state",
+			Value: state,
+		})
+
+		resp, err := http.DefaultClient.Do(rqst)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -104,7 +114,19 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		form.Set("email", email)
 		form.Set("password", password)
 
-		res, err := http.Post(fmt.Sprintf("%s/op/login", endpoint), "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
+		rqt, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/op/login", endpoint), strings.NewReader(form.Encode()))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rqt.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		rqt.AddCookie(&http.Cookie{
+			Name:  "state",
+			Value: state,
+		})
+
+		res, err := http.DefaultClient.Do(rqt)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -153,7 +175,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("response_type", "code")
 		params.Add("scope", "openid phone") // 許可されていないscope phone を含める
 		params.Add("client_id", clientID)
-		params.Add("redirect_uri", "http://localhost:8080/rp/callback")
+		params.Add("redirect_uri", fmt.Sprintf("%s/rp/callback", endpoint))
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
@@ -208,7 +230,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
 		params.Add("client_id", clientID)
-		params.Add("redirect_uri", "http://localhost:5050") // 登録されていないredirect_uri
+		params.Add("redirect_uri", "http://localhost:1234") // 登録されていないredirect_uri
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 
@@ -264,7 +286,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		params.Add("response_type", "code")
 		params.Add("scope", "openid profile email")
 		params.Add("client_id", clientID)
-		params.Add("redirect_uri", "http://localhost:8080/rp/callback")
+		params.Add("redirect_uri", fmt.Sprintf("%s/rp/callback", endpoint))
 		params.Add("state", state)
 		params.Add("nonce", nonce)
 

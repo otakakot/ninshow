@@ -124,7 +124,7 @@ func (ctl *Controller) OpAuthorize(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	output, err := ctl.op.Autorize(ctx, usecase.OpenIDProviderAuthorizeInput{
+	output, err := ctl.op.Authorize(ctx, usecase.OpenIDProviderAuthorizeInput{
 		LoginURL:     fmt.Sprintf("%s/op/login", ctl.config.SelfEndpoint()),
 		ResponseType: string(params.ResponseType),
 		Scope:        strings.Split(params.Scope, " "),
@@ -418,6 +418,11 @@ func (ctl *Controller) RpCallback(
 ) (api.RpCallbackRes, error) {
 	end := log.StartEnd(ctx)
 	defer end()
+
+	// CSRF 対策
+	if params.QueryState != params.CookieState {
+		return &api.RpCallbackBadRequest{}, nil
+	}
 
 	output, err := ctl.rp.Callback(ctx, usecase.RelyingPartyCallbackInput{
 		Code:         params.Code,

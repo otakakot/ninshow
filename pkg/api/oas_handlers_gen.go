@@ -1616,7 +1616,11 @@ func (s *Server) handleRpCallbackRequest(args [0]string, argsEscaped bool, w htt
 				{
 					Name: "state",
 					In:   "query",
-				}: params.State,
+				}: params.QueryState,
+				{
+					Name: "state",
+					In:   "cookie",
+				}: params.CookieState,
 			},
 			Raw: r,
 		}

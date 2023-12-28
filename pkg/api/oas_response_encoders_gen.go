@@ -548,6 +548,12 @@ func encodeRpCallbackResponse(response RpCallbackRes, w http.ResponseWriter, spa
 
 		return nil
 
+	case *RpCallbackBadRequest:
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		return nil
+
 	case *RpCallbackInternalServerError:
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))

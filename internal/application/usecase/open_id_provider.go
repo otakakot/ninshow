@@ -11,7 +11,7 @@ import (
 
 type OpenIDProviider interface {
 	Configuration(ctx context.Context, input OpenIDProviderConfigurationInput) (*OpenIDProviderConfigurationOutput, error)
-	Autorize(ctx context.Context, input OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
+	Authorize(ctx context.Context, input OpenIDProviderAuthorizeInput) (*OpenIDProviderAuthorizeOutput, error)
 	LoginVeiw(ctx context.Context, input OpenIDProviderLoginViewInput) (*OpenIDProviderLoginViewOutput, error)
 	Login(ctx context.Context, input OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
 	Callback(ctx context.Context, input OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)

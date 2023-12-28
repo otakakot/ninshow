@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/otakakot/ninshow/internal/adapter/controller"
 	"github.com/otakakot/ninshow/internal/adapter/gateway"
@@ -38,7 +39,7 @@ func main() {
 		cfg.RelyingPartyID(),
 		"ninshow",
 		cfg.RelyingPartySecret(),
-		"http://localhost:8080/rp/callback",
+		fmt.Sprintf("%s/rp/callback", cfg.SelfEndpoint()),
 	))
 
 	// for NextAuth

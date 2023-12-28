@@ -1522,7 +1522,7 @@ func (c *Client) sendRpCallback(ctx context.Context, params RpCallbackParams) (r
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.State))
+			return e.EncodeValue(conv.StringToString(params.QueryState))
 		}); err != nil {
 			return res, errors.Wrap(err, "encode query")
 		}
@@ -1533,6 +1533,22 @@ func (c *Client) sendRpCallback(ctx context.Context, params RpCallbackParams) (r
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "EncodeCookieParams"
+	cookie := uri.NewCookieEncoder(r)
+	{
+		// Encode "state" parameter.
+		cfg := uri.CookieParameterEncodingConfig{
+			Name:    "state",
+			Explode: true,
+		}
+
+		if err := cookie.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(params.CookieState))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode cookie")
+		}
 	}
 
 	stage = "SendRequest"

@@ -57,7 +57,7 @@ func (*OpenIDProvider) Configuration(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	endpoint := "http://localhost:8080"
+	endpoint := "http://localhost:5555"
 
 	issuer, _ := url.Parse(endpoint)
 
@@ -81,8 +81,8 @@ func (*OpenIDProvider) Configuration(
 	}, nil
 }
 
-// Autorize implements usecase.OpenIDProviider.
-func (op *OpenIDProvider) Autorize(
+// Authorize implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) Authorize(
 	ctx context.Context,
 	input usecase.OpenIDProviderAuthorizeInput,
 ) (*usecase.OpenIDProviderAuthorizeOutput, error) {
@@ -97,7 +97,7 @@ func (op *OpenIDProvider) Autorize(
 	slog.Info(fmt.Sprintf("%+v", cli))
 
 	if cli.RedirectURI != input.RedirectURI {
-		slog.Warn(fmt.Sprintf("input: %v, got: %v", input.RedirectURI, cli.RedirectURI))
+		slog.Warn(fmt.Sprintf("want: %s, got: %s", cli.RedirectURI, input.RedirectURI))
 
 		return nil, errors.ErrInvalidRequest
 	}

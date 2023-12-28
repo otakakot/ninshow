@@ -907,6 +907,9 @@ func decodeRpCallbackResponse(resp *http.Response) (res RpCallbackRes, _ error) 
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 400:
+		// Code 400.
+		return &RpCallbackBadRequest{}, nil
 	case 500:
 		// Code 500.
 		return &RpCallbackInternalServerError{}, nil

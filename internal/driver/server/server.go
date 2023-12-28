@@ -36,7 +36,7 @@ func (srv *Server) Run() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "5555"
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
