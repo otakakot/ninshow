@@ -107,20 +107,20 @@ func (s *Server) handleHealthRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 }
 
-// handleIdpOIDCRequest handles idpOIDC operation.
+// handleIdpOIDCCallbackRequest handles idpOIDCCallback operation.
 //
-// OpenID Connect.
+// OpenID Connect Callback.
 //
-// GET /idp/oidc
-func (s *Server) handleIdpOIDCRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+// GET /idp/oidc/callback
+func (s *Server) handleIdpOIDCCallbackRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("idpOIDC"),
+		otelogen.OperationID("idpOIDCCallback"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/idp/oidc"),
+		semconv.HTTPRouteKey.String("/idp/oidc/callback"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "IdpOIDC",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "IdpOIDCCallback",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -145,11 +145,11 @@ func (s *Server) handleIdpOIDCRequest(args [0]string, argsEscaped bool, w http.R
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "IdpOIDC",
-			ID:   "idpOIDC",
+			Name: "IdpOIDCCallback",
+			ID:   "idpOIDCCallback",
 		}
 	)
-	params, err := decodeIdpOIDCParams(args, argsEscaped, r)
+	params, err := decodeIdpOIDCCallbackParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -160,13 +160,123 @@ func (s *Server) handleIdpOIDCRequest(args [0]string, argsEscaped bool, w http.R
 		return
 	}
 
-	var response IdpOIDCRes
+	var response IdpOIDCCallbackRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "IdpOIDC",
-			OperationSummary: "OpenID Connect",
-			OperationID:      "idpOIDC",
+			OperationName:    "IdpOIDCCallback",
+			OperationSummary: "OpenID Connect Callback",
+			OperationID:      "idpOIDCCallback",
+			Body:             nil,
+			Params: middleware.Parameters{
+				{
+					Name: "code",
+					In:   "query",
+				}: params.Code,
+				{
+					Name: "state",
+					In:   "query",
+				}: params.State,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = IdpOIDCCallbackParams
+			Response = IdpOIDCCallbackRes
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackIdpOIDCCallbackParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.IdpOIDCCallback(ctx, params)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.IdpOIDCCallback(ctx, params)
+	}
+	if err != nil {
+		recordError("Internal", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	if err := encodeIdpOIDCCallbackResponse(response, w, span); err != nil {
+		recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleIdpOIDCLoginRequest handles idpOIDCLogin operation.
+//
+// OpenID Connect Login.
+//
+// GET /idp/oidc/login
+func (s *Server) handleIdpOIDCLoginRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("idpOIDCLogin"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/idp/oidc/login"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "IdpOIDCLogin",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	s.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "IdpOIDCLogin",
+			ID:   "idpOIDCLogin",
+		}
+	)
+	params, err := decodeIdpOIDCLoginParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+
+	var response IdpOIDCLoginRes
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    "IdpOIDCLogin",
+			OperationSummary: "OpenID Connect Login",
+			OperationID:      "idpOIDCLogin",
 			Body:             nil,
 			Params: middleware.Parameters{
 				{
@@ -179,8 +289,8 @@ func (s *Server) handleIdpOIDCRequest(args [0]string, argsEscaped bool, w http.R
 
 		type (
 			Request  = struct{}
-			Params   = IdpOIDCParams
-			Response = IdpOIDCRes
+			Params   = IdpOIDCLoginParams
+			Response = IdpOIDCLoginRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -189,14 +299,14 @@ func (s *Server) handleIdpOIDCRequest(args [0]string, argsEscaped bool, w http.R
 		](
 			m,
 			mreq,
-			unpackIdpOIDCParams,
+			unpackIdpOIDCLoginParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.IdpOIDC(ctx, params)
+				response, err = s.h.IdpOIDCLogin(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.IdpOIDC(ctx, params)
+		response, err = s.h.IdpOIDCLogin(ctx, params)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -204,7 +314,7 @@ func (s *Server) handleIdpOIDCRequest(args [0]string, argsEscaped bool, w http.R
 		return
 	}
 
-	if err := encodeIdpOIDCResponse(response, w, span); err != nil {
+	if err := encodeIdpOIDCLoginResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)

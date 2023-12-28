@@ -88,23 +88,53 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case 'o': // Prefix: "oidc"
-					if l := len("oidc"); len(elem) >= l && elem[0:l] == "oidc" {
+				case 'o': // Prefix: "oidc/"
+					if l := len("oidc/"); len(elem) >= l && elem[0:l] == "oidc/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						// Leaf node.
-						switch r.Method {
-						case "GET":
-							s.handleIdpOIDCRequest([0]string{}, elemIsEscaped, w, r)
-						default:
-							s.notAllowed(w, r, "GET")
+						break
+					}
+					switch elem[0] {
+					case 'c': // Prefix: "callback"
+						if l := len("callback"); len(elem) >= l && elem[0:l] == "callback" {
+							elem = elem[l:]
+						} else {
+							break
 						}
 
-						return
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleIdpOIDCCallbackRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+					case 'l': // Prefix: "login"
+						if l := len("login"); len(elem) >= l && elem[0:l] == "login" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleIdpOIDCLoginRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
 					}
 				case 's': // Prefix: "sign"
 					if l := len("sign"); len(elem) >= l && elem[0:l] == "sign" {
@@ -498,26 +528,60 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case 'o': // Prefix: "oidc"
-					if l := len("oidc"); len(elem) >= l && elem[0:l] == "oidc" {
+				case 'o': // Prefix: "oidc/"
+					if l := len("oidc/"); len(elem) >= l && elem[0:l] == "oidc/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						switch method {
-						case "GET":
-							// Leaf: IdpOIDC
-							r.name = "IdpOIDC"
-							r.summary = "OpenID Connect"
-							r.operationID = "idpOIDC"
-							r.pathPattern = "/idp/oidc"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
+						break
+					}
+					switch elem[0] {
+					case 'c': // Prefix: "callback"
+						if l := len("callback"); len(elem) >= l && elem[0:l] == "callback" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: IdpOIDCCallback
+								r.name = "IdpOIDCCallback"
+								r.summary = "OpenID Connect Callback"
+								r.operationID = "idpOIDCCallback"
+								r.pathPattern = "/idp/oidc/callback"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+					case 'l': // Prefix: "login"
+						if l := len("login"); len(elem) >= l && elem[0:l] == "login" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: IdpOIDCLogin
+								r.name = "IdpOIDCLogin"
+								r.summary = "OpenID Connect Login"
+								r.operationID = "idpOIDCLogin"
+								r.pathPattern = "/idp/oidc/login"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
 						}
 					}
 				case 's': // Prefix: "sign"

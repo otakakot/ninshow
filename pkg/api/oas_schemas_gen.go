@@ -101,50 +101,71 @@ func (s *IdPSignupRequestSchema) SetPassword(val string) {
 	s.Password = val
 }
 
-// IdpOIDCBadRequest is response for IdpOIDC operation.
-type IdpOIDCBadRequest struct{}
+// IdpOIDCCallbackInternalServerError is response for IdpOIDCCallback operation.
+type IdpOIDCCallbackInternalServerError struct{}
 
-func (*IdpOIDCBadRequest) idpOIDCRes() {}
+func (*IdpOIDCCallbackInternalServerError) idpOIDCCallbackRes() {}
 
-// IdpOIDCFound is response for IdpOIDC operation.
-type IdpOIDCFound struct {
+type IdpOIDCCallbackOK struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s IdpOIDCCallbackOK) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+func (*IdpOIDCCallbackOK) idpOIDCCallbackRes() {}
+
+// IdpOIDCLoginBadRequest is response for IdpOIDCLogin operation.
+type IdpOIDCLoginBadRequest struct{}
+
+func (*IdpOIDCLoginBadRequest) idpOIDCLoginRes() {}
+
+// IdpOIDCLoginFound is response for IdpOIDCLogin operation.
+type IdpOIDCLoginFound struct {
 	Location OptURI
 }
 
 // GetLocation returns the value of Location.
-func (s *IdpOIDCFound) GetLocation() OptURI {
+func (s *IdpOIDCLoginFound) GetLocation() OptURI {
 	return s.Location
 }
 
 // SetLocation sets the value of Location.
-func (s *IdpOIDCFound) SetLocation(val OptURI) {
+func (s *IdpOIDCLoginFound) SetLocation(val OptURI) {
 	s.Location = val
 }
 
-func (*IdpOIDCFound) idpOIDCRes() {}
+func (*IdpOIDCLoginFound) idpOIDCLoginRes() {}
 
-// IdpOIDCInternalServerError is response for IdpOIDC operation.
-type IdpOIDCInternalServerError struct{}
+// IdpOIDCLoginInternalServerError is response for IdpOIDCLogin operation.
+type IdpOIDCLoginInternalServerError struct{}
 
-func (*IdpOIDCInternalServerError) idpOIDCRes() {}
+func (*IdpOIDCLoginInternalServerError) idpOIDCLoginRes() {}
 
-type IdpOIDCOp string
+type IdpOIDCLoginOp string
 
 const (
-	IdpOIDCOpZitadel IdpOIDCOp = "zitadel"
+	IdpOIDCLoginOpZitadel IdpOIDCLoginOp = "zitadel"
 )
 
-// AllValues returns all IdpOIDCOp values.
-func (IdpOIDCOp) AllValues() []IdpOIDCOp {
-	return []IdpOIDCOp{
-		IdpOIDCOpZitadel,
+// AllValues returns all IdpOIDCLoginOp values.
+func (IdpOIDCLoginOp) AllValues() []IdpOIDCLoginOp {
+	return []IdpOIDCLoginOp{
+		IdpOIDCLoginOpZitadel,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s IdpOIDCOp) MarshalText() ([]byte, error) {
+func (s IdpOIDCLoginOp) MarshalText() ([]byte, error) {
 	switch s {
-	case IdpOIDCOpZitadel:
+	case IdpOIDCLoginOpZitadel:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -152,10 +173,10 @@ func (s IdpOIDCOp) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *IdpOIDCOp) UnmarshalText(data []byte) error {
-	switch IdpOIDCOp(data) {
-	case IdpOIDCOpZitadel:
-		*s = IdpOIDCOpZitadel
+func (s *IdpOIDCLoginOp) UnmarshalText(data []byte) error {
+	switch IdpOIDCLoginOp(data) {
+	case IdpOIDCLoginOpZitadel:
+		*s = IdpOIDCLoginOpZitadel
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

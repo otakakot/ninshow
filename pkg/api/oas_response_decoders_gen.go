@@ -30,11 +30,39 @@ func decodeHealthResponse(resp *http.Response) (res HealthRes, _ error) {
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }
 
-func decodeIdpOIDCResponse(resp *http.Response) (res IdpOIDCRes, _ error) {
+func decodeIdpOIDCCallbackResponse(resp *http.Response) (res IdpOIDCCallbackRes, _ error) {
+	switch resp.StatusCode {
+	case 200:
+		// Code 200.
+		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			return res, errors.Wrap(err, "parse media type")
+		}
+		switch {
+		case ct == "text/html":
+			reader := resp.Body
+			b, err := io.ReadAll(reader)
+			if err != nil {
+				return res, err
+			}
+
+			response := IdpOIDCCallbackOK{Data: bytes.NewReader(b)}
+			return &response, nil
+		default:
+			return res, validate.InvalidContentType(ct)
+		}
+	case 500:
+		// Code 500.
+		return &IdpOIDCCallbackInternalServerError{}, nil
+	}
+	return res, validate.UnexpectedStatusCode(resp.StatusCode)
+}
+
+func decodeIdpOIDCLoginResponse(resp *http.Response) (res IdpOIDCLoginRes, _ error) {
 	switch resp.StatusCode {
 	case 302:
 		// Code 302.
-		var wrapper IdpOIDCFound
+		var wrapper IdpOIDCLoginFound
 		h := uri.NewHeaderDecoder(resp.Header)
 		// Parse "Location" header.
 		{
@@ -76,10 +104,10 @@ func decodeIdpOIDCResponse(resp *http.Response) (res IdpOIDCRes, _ error) {
 		return &wrapper, nil
 	case 400:
 		// Code 400.
-		return &IdpOIDCBadRequest{}, nil
+		return &IdpOIDCLoginBadRequest{}, nil
 	case 500:
 		// Code 500.
-		return &IdpOIDCInternalServerError{}, nil
+		return &IdpOIDCLoginInternalServerError{}, nil
 	}
 	return res, validate.UnexpectedStatusCode(resp.StatusCode)
 }

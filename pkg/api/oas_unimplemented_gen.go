@@ -22,12 +22,21 @@ func (UnimplementedHandler) Health(ctx context.Context) (r HealthRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// IdpOIDC implements idpOIDC operation.
+// IdpOIDCCallback implements idpOIDCCallback operation.
 //
-// OpenID Connect.
+// OpenID Connect Callback.
 //
-// GET /idp/oidc
-func (UnimplementedHandler) IdpOIDC(ctx context.Context, params IdpOIDCParams) (r IdpOIDCRes, _ error) {
+// GET /idp/oidc/callback
+func (UnimplementedHandler) IdpOIDCCallback(ctx context.Context, params IdpOIDCCallbackParams) (r IdpOIDCCallbackRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// IdpOIDCLogin implements idpOIDCLogin operation.
+//
+// OpenID Connect Login.
+//
+// GET /idp/oidc/login
+func (UnimplementedHandler) IdpOIDCLogin(ctx context.Context, params IdpOIDCLoginParams) (r IdpOIDCLoginRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

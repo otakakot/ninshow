@@ -100,11 +100,19 @@ func (ctl *Controller) IdpSignin(
 	return &api.IdpSigninOK{}, nil
 }
 
-// IdpOIDC implements api.Handler.
-func (ctl *Controller) IdpOIDC(
+// IdpOIDCLogin implements api.Handler.
+func (clt *Controller) IdpOIDCLogin(
 	ctx context.Context,
-	params api.IdpOIDCParams,
-) (api.IdpOIDCRes, error) {
+	params api.IdpOIDCLoginParams,
+) (api.IdpOIDCLoginRes, error) {
+	panic("unimplemented")
+}
+
+// IdpOIDCCallback implements api.Handler.
+func (ctl *Controller) IdpOIDCCallback(
+	ctx context.Context,
+	params api.IdpOIDCCallbackParams,
+) (api.IdpOIDCCallbackRes, error) {
 	panic("unimplemented")
 }
 

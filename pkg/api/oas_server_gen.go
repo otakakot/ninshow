@@ -14,12 +14,18 @@ type Handler interface {
 	//
 	// GET /health
 	Health(ctx context.Context) (HealthRes, error)
-	// IdpOIDC implements idpOIDC operation.
+	// IdpOIDCCallback implements idpOIDCCallback operation.
 	//
-	// OpenID Connect.
+	// OpenID Connect Callback.
 	//
-	// GET /idp/oidc
-	IdpOIDC(ctx context.Context, params IdpOIDCParams) (IdpOIDCRes, error)
+	// GET /idp/oidc/callback
+	IdpOIDCCallback(ctx context.Context, params IdpOIDCCallbackParams) (IdpOIDCCallbackRes, error)
+	// IdpOIDCLogin implements idpOIDCLogin operation.
+	//
+	// OpenID Connect Login.
+	//
+	// GET /idp/oidc/login
+	IdpOIDCLogin(ctx context.Context, params IdpOIDCLoginParams) (IdpOIDCLoginRes, error)
 	// IdpSignin implements idpSignin operation.
 	//
 	// Sign In.

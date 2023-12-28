@@ -62,7 +62,7 @@ func encodeOpLoginRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "id" form field.
 		cfg := uri.QueryParameterEncodingConfig{
@@ -114,7 +114,7 @@ func encodeOpRevokeRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "token" form field.
 		cfg := uri.QueryParameterEncodingConfig{
@@ -156,7 +156,7 @@ func encodeOpTokenRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "grant_type" form field.
 		cfg := uri.QueryParameterEncodingConfig{

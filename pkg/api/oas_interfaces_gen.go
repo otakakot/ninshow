@@ -5,8 +5,12 @@ type HealthRes interface {
 	healthRes()
 }
 
-type IdpOIDCRes interface {
-	idpOIDCRes()
+type IdpOIDCCallbackRes interface {
+	idpOIDCCallbackRes()
+}
+
+type IdpOIDCLoginRes interface {
+	idpOIDCLoginRes()
 }
 
 type IdpSigninRes interface {

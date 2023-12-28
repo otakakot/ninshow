@@ -30,12 +30,18 @@ type Invoker interface {
 	//
 	// GET /health
 	Health(ctx context.Context) (HealthRes, error)
-	// IdpOIDC invokes idpOIDC operation.
+	// IdpOIDCCallback invokes idpOIDCCallback operation.
 	//
-	// OpenID Connect.
+	// OpenID Connect Callback.
 	//
-	// GET /idp/oidc
-	IdpOIDC(ctx context.Context, params IdpOIDCParams) (IdpOIDCRes, error)
+	// GET /idp/oidc/callback
+	IdpOIDCCallback(ctx context.Context, params IdpOIDCCallbackParams) (IdpOIDCCallbackRes, error)
+	// IdpOIDCLogin invokes idpOIDCLogin operation.
+	//
+	// OpenID Connect Login.
+	//
+	// GET /idp/oidc/login
+	IdpOIDCLogin(ctx context.Context, params IdpOIDCLoginParams) (IdpOIDCLoginRes, error)
 	// IdpSignin invokes idpSignin operation.
 	//
 	// Sign In.
@@ -241,21 +247,21 @@ func (c *Client) sendHealth(ctx context.Context) (res HealthRes, err error) {
 	return result, nil
 }
 
-// IdpOIDC invokes idpOIDC operation.
+// IdpOIDCCallback invokes idpOIDCCallback operation.
 //
-// OpenID Connect.
+// OpenID Connect Callback.
 //
-// GET /idp/oidc
-func (c *Client) IdpOIDC(ctx context.Context, params IdpOIDCParams) (IdpOIDCRes, error) {
-	res, err := c.sendIdpOIDC(ctx, params)
+// GET /idp/oidc/callback
+func (c *Client) IdpOIDCCallback(ctx context.Context, params IdpOIDCCallbackParams) (IdpOIDCCallbackRes, error) {
+	res, err := c.sendIdpOIDCCallback(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendIdpOIDC(ctx context.Context, params IdpOIDCParams) (res IdpOIDCRes, err error) {
+func (c *Client) sendIdpOIDCCallback(ctx context.Context, params IdpOIDCCallbackParams) (res IdpOIDCCallbackRes, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("idpOIDC"),
+		otelogen.OperationID("idpOIDCCallback"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/idp/oidc"),
+		semconv.HTTPRouteKey.String("/idp/oidc/callback"),
 	}
 
 	// Run stopwatch.
@@ -270,7 +276,7 @@ func (c *Client) sendIdpOIDC(ctx context.Context, params IdpOIDCParams) (res Idp
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "IdpOIDC",
+	ctx, span := c.cfg.Tracer.Start(ctx, "IdpOIDCCallback",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -288,7 +294,111 @@ func (c *Client) sendIdpOIDC(ctx context.Context, params IdpOIDCParams) (res Idp
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/idp/oidc"
+	pathParts[0] = "/idp/oidc/callback"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "code" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "code",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(params.Code))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "state" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "state",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(params.State))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeIdpOIDCCallbackResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// IdpOIDCLogin invokes idpOIDCLogin operation.
+//
+// OpenID Connect Login.
+//
+// GET /idp/oidc/login
+func (c *Client) IdpOIDCLogin(ctx context.Context, params IdpOIDCLoginParams) (IdpOIDCLoginRes, error) {
+	res, err := c.sendIdpOIDCLogin(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendIdpOIDCLogin(ctx context.Context, params IdpOIDCLoginParams) (res IdpOIDCLoginRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("idpOIDCLogin"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/idp/oidc/login"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "IdpOIDCLogin",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/idp/oidc/login"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -323,7 +433,7 @@ func (c *Client) sendIdpOIDC(ctx context.Context, params IdpOIDCParams) (res Idp
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeIdpOIDCResponse(resp)
+	result, err := decodeIdpOIDCLoginResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

@@ -72,7 +72,7 @@ func (s *IdPSignupRequestSchema) Validate() error {
 	return nil
 }
 
-func (s IdpOIDCOp) Validate() error {
+func (s IdpOIDCLoginOp) Validate() error {
 	switch s {
 	case "zitadel":
 		return nil

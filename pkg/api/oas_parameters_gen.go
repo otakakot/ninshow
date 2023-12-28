@@ -13,24 +13,127 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// IdpOIDCParams is parameters of idpOIDC operation.
-type IdpOIDCParams struct {
-	// Op.
-	Op IdpOIDCOp
+// IdpOIDCCallbackParams is parameters of idpOIDCCallback operation.
+type IdpOIDCCallbackParams struct {
+	// Code.
+	Code string
+	// State.
+	State string
 }
 
-func unpackIdpOIDCParams(packed middleware.Parameters) (params IdpOIDCParams) {
+func unpackIdpOIDCCallbackParams(packed middleware.Parameters) (params IdpOIDCCallbackParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "code",
+			In:   "query",
+		}
+		params.Code = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "state",
+			In:   "query",
+		}
+		params.State = packed[key].(string)
+	}
+	return params
+}
+
+func decodeIdpOIDCCallbackParams(args [0]string, argsEscaped bool, r *http.Request) (params IdpOIDCCallbackParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: code.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "code",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Code = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "code",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: state.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "state",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.State = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "state",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// IdpOIDCLoginParams is parameters of idpOIDCLogin operation.
+type IdpOIDCLoginParams struct {
+	// Op.
+	Op IdpOIDCLoginOp
+}
+
+func unpackIdpOIDCLoginParams(packed middleware.Parameters) (params IdpOIDCLoginParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "op",
 			In:   "query",
 		}
-		params.Op = packed[key].(IdpOIDCOp)
+		params.Op = packed[key].(IdpOIDCLoginOp)
 	}
 	return params
 }
 
-func decodeIdpOIDCParams(args [0]string, argsEscaped bool, r *http.Request) (params IdpOIDCParams, _ error) {
+func decodeIdpOIDCLoginParams(args [0]string, argsEscaped bool, r *http.Request) (params IdpOIDCLoginParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: op.
 	if err := func() error {
@@ -52,7 +155,7 @@ func decodeIdpOIDCParams(args [0]string, argsEscaped bool, r *http.Request) (par
 					return err
 				}
 
-				params.Op = IdpOIDCOp(c)
+				params.Op = IdpOIDCLoginOp(c)
 				return nil
 			}); err != nil {
 				return err

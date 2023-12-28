@@ -34,9 +34,34 @@ func encodeHealthResponse(response HealthRes, w http.ResponseWriter, span trace.
 	}
 }
 
-func encodeIdpOIDCResponse(response IdpOIDCRes, w http.ResponseWriter, span trace.Span) error {
+func encodeIdpOIDCCallbackResponse(response IdpOIDCCallbackRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *IdpOIDCFound:
+	case *IdpOIDCCallbackOK:
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		writer := w
+		if _, err := io.Copy(writer, response); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *IdpOIDCCallbackInternalServerError:
+		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeIdpOIDCLoginResponse(response IdpOIDCLoginRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *IdpOIDCLoginFound:
 		// Encoding response headers.
 		{
 			h := uri.NewHeaderEncoder(w.Header())
@@ -61,13 +86,13 @@ func encodeIdpOIDCResponse(response IdpOIDCRes, w http.ResponseWriter, span trac
 
 		return nil
 
-	case *IdpOIDCBadRequest:
+	case *IdpOIDCLoginBadRequest:
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
 
 		return nil
 
-	case *IdpOIDCInternalServerError:
+	case *IdpOIDCLoginInternalServerError:
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
 
