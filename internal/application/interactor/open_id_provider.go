@@ -247,8 +247,34 @@ func (op *OpenIDProvider) Callback(
 	}
 
 	if val.ResponseType == "id_token" {
-		// TODO: id_token の生成
-		values.Add("id_token", "id_token")
+		account, err := op.account.Find(ctx, input.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find account: %w", err)
+		}
+
+		var (
+			profile *string
+			email   *string
+		)
+
+		if slices.Contains(val.Scope, "profile") {
+			profile = &account.Name
+		}
+
+		if slices.Contains(val.Scope, "email") {
+			email = &account.Email
+		}
+
+		it := model.GenerateIDToken(
+			input.Issuer,
+			account.ID,
+			val.ClientID,
+			val.Nonce,
+			profile,
+			email,
+		).RSA256(input.IDTokenSignKey)
+
+		values.Add("id_token", it)
 	}
 
 	buf.WriteByte('?')

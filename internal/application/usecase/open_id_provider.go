@@ -67,7 +67,9 @@ type OpenIDProviderLoginOutput struct {
 }
 
 type OpenIDProviderCallbackInput struct {
-	ID string
+	ID             string
+	Issuer         string
+	IDTokenSignKey *rsa.PrivateKey
 }
 
 type OpenIDProviderCallbackOutput struct {

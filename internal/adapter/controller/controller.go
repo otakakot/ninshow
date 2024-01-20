@@ -176,7 +176,9 @@ func (ctl *Controller) OpCallback(
 	defer end()
 
 	output, err := ctl.op.Callback(ctx, usecase.OpenIDProviderCallbackInput{
-		ID: params.ID,
+		ID:             params.ID,
+		Issuer:         ctl.config.SelfEndpoint(),
+		IDTokenSignKey: ctl.config.IDTokenSignKey(),
 	})
 	if err != nil {
 		return &api.OpCallbackInternalServerError{}, err
