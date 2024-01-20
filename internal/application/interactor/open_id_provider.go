@@ -113,11 +113,12 @@ func (op *OpenIDProvider) Authorize(
 	}
 
 	if err := op.param.Set(ctx, id, model.AuthorizeParam{
-		RedirectURI: input.RedirectURI,
-		State:       input.State,
-		Scope:       input.Scope,
-		ClientID:    input.ClientID,
-		Nonce:       input.Nonce,
+		RedirectURI:  input.RedirectURI,
+		State:        input.State,
+		ResponseType: input.ResponseType,
+		Scope:        input.Scope,
+		ClientID:     input.ClientID,
+		Nonce:        input.Nonce,
 	}, time.Second); err != nil {
 		return nil, errors.ErrServerError
 	}
@@ -238,8 +239,16 @@ func (op *OpenIDProvider) Callback(
 	buf.WriteString(val.RedirectURI)
 
 	values := url.Values{
-		"code":  {input.ID},
 		"state": {val.State},
+	}
+
+	if val.ResponseType == "code" {
+		values.Add("code", input.ID)
+	}
+
+	if val.ResponseType == "id_token" {
+		// TODO: id_token の生成
+		values.Add("id_token", "id_token")
 	}
 
 	buf.WriteByte('?')

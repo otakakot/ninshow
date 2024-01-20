@@ -1011,13 +1011,15 @@ func (s *OpAuthorizeInternalServerErrorError) UnmarshalText(data []byte) error {
 type OpAuthorizeResponseType string
 
 const (
-	OpAuthorizeResponseTypeCode OpAuthorizeResponseType = "code"
+	OpAuthorizeResponseTypeCode    OpAuthorizeResponseType = "code"
+	OpAuthorizeResponseTypeIDToken OpAuthorizeResponseType = "id_token"
 )
 
 // AllValues returns all OpAuthorizeResponseType values.
 func (OpAuthorizeResponseType) AllValues() []OpAuthorizeResponseType {
 	return []OpAuthorizeResponseType{
 		OpAuthorizeResponseTypeCode,
+		OpAuthorizeResponseTypeIDToken,
 	}
 }
 
@@ -1025,6 +1027,8 @@ func (OpAuthorizeResponseType) AllValues() []OpAuthorizeResponseType {
 func (s OpAuthorizeResponseType) MarshalText() ([]byte, error) {
 	switch s {
 	case OpAuthorizeResponseTypeCode:
+		return []byte(s), nil
+	case OpAuthorizeResponseTypeIDToken:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -1036,6 +1040,9 @@ func (s *OpAuthorizeResponseType) UnmarshalText(data []byte) error {
 	switch OpAuthorizeResponseType(data) {
 	case OpAuthorizeResponseTypeCode:
 		*s = OpAuthorizeResponseTypeCode
+		return nil
+	case OpAuthorizeResponseTypeIDToken:
+		*s = OpAuthorizeResponseTypeIDToken
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

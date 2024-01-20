@@ -406,6 +406,8 @@ func (s OpAuthorizeResponseType) Validate() error {
 	switch s {
 	case "code":
 		return nil
+	case "id_token":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}

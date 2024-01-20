@@ -166,6 +166,7 @@ paths:
             type: string
             enum:
               - code
+              - id_token
         - name: scope
           in: query
           required: true
