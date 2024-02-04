@@ -99,10 +99,7 @@ func (rp *RelyingParty) Callback(
 
 	redirectURI, _ := url.Parse("")
 
-	verifier, ok := rp.verifieis[input.State]
-	if !ok {
-		return nil, fmt.Errorf("failed to get verifier: %w", err)
-	}
+	verifier := rp.verifieis[input.State]
 
 	res, err := cli.OpToken(ctx, &api.OPTokenRequestSchema{
 		GrantType:    api.OPTokenRequestSchemaGrantTypeAuthorizationCode,

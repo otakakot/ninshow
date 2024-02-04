@@ -137,7 +137,10 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		}
 	})
 
-	// TODO: PKCE による認可コードグラントのテストを追加する
+	// NOTE: PKCE のテストを実装したいが
+	// GET /rp/login へのアクセスを実施すると勝手にリダイレクトが発生してうまく処理ができないため一旦保留にしておく
+	// GET /rp/login アクセス時の state で verifier を保存しておく必要があるため
+	// RP の実装を E2E で書くしかないか
 
 	t.Run("許可されていないscopeにより失敗", func(t *testing.T) {
 		t.Parallel()
