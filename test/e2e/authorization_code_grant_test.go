@@ -137,6 +137,8 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 		}
 	})
 
+	// TODO: PKCE による認可コードグラントのテストを追加する
+
 	t.Run("許可されていないscopeにより失敗", func(t *testing.T) {
 		t.Parallel()
 

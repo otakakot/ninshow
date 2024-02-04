@@ -196,6 +196,10 @@ type OpAuthorizeParams struct {
 	State OptString
 	// Nonce.
 	Nonce OptString
+	// Code_challenge.
+	CodeChallenge OptString
+	// Code_challenge_method.
+	CodeChallengeMethod OptOpAuthorizeCodeChallengeMethod
 }
 
 func unpackOpAuthorizeParams(packed middleware.Parameters) (params OpAuthorizeParams) {
@@ -243,6 +247,24 @@ func unpackOpAuthorizeParams(packed middleware.Parameters) (params OpAuthorizePa
 		}
 		if v, ok := packed[key]; ok {
 			params.Nonce = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "code_challenge",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.CodeChallenge = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "code_challenge_method",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.CodeChallengeMethod = v.(OptOpAuthorizeCodeChallengeMethod)
 		}
 	}
 	return params
@@ -480,6 +502,103 @@ func decodeOpAuthorizeParams(args [0]string, argsEscaped bool, r *http.Request) 
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "nonce",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: code_challenge.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "code_challenge",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotCodeChallengeVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCodeChallengeVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CodeChallenge.SetTo(paramsDotCodeChallengeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "code_challenge",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: code_challenge_method.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "code_challenge_method",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotCodeChallengeMethodVal OpAuthorizeCodeChallengeMethod
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCodeChallengeMethodVal = OpAuthorizeCodeChallengeMethod(c)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CodeChallengeMethod.SetTo(paramsDotCodeChallengeMethodVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.CodeChallengeMethod.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "code_challenge_method",
 			In:   "query",
 			Err:  err,
 		}

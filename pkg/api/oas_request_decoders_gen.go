@@ -690,6 +690,38 @@ func (s *Server) decodeOpTokenRequest(r *http.Request) (
 				}
 			}
 		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "code_verifier",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotCodeVerifierVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotCodeVerifierVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.CodeVerifier.SetTo(requestDotCodeVerifierVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"code_verifier\"")
+				}
+			}
+		}
 		return &request, close, nil
 	default:
 		return req, close, validate.InvalidContentType(ct)

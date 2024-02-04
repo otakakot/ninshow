@@ -16,7 +16,7 @@ type OpenIDProviider interface {
 	Login(ctx context.Context, input OpenIDProviderLoginInput) (*OpenIDProviderLoginOutput, error)
 	Callback(ctx context.Context, input OpenIDProviderCallbackInput) (*OpenIDProviderCallbackOutput, error)
 	AuthorizationCodeGrant(ctx context.Context, input OpenIDProviderAuthorizationCodeGrantInput) (*OpenIDProviderAuthorizationCodeGrantOutput, error)
-	RefreshTkenGrant(ctx context.Context, input OpenIDProviderRefreshTokenGrantInput) (*OpenIDProviderRefreshTokenGrantOutput, error)
+	RefreshTokenGrant(ctx context.Context, input OpenIDProviderRefreshTokenGrantInput) (*OpenIDProviderRefreshTokenGrantOutput, error)
 	Userinfo(ctx context.Context, input OpenIDProviderUserinfoInput) (*OpenIDProviderUserinfoOutput, error)
 	Certs(ctx context.Context, input OpenIDProviderCertsInput) (*OpenIDProviderCertsOutput, error)
 	Revoke(ctx context.Context, input OpenIDProviderRevokeInput) (*OpenIDProviderRevokeOutput, error)
@@ -34,13 +34,14 @@ type OpenIDProviderConfigurationOutput struct {
 }
 
 type OpenIDProviderAuthorizeInput struct {
-	LoginURL     string
-	ResponseType string
-	Scope        []string
-	ClientID     string
-	RedirectURI  string
-	State        string
-	Nonce        string
+	LoginURL      string
+	ResponseType  string
+	Scope         []string
+	ClientID      string
+	RedirectURI   string
+	State         string
+	Nonce         string
+	CodeChallenge *model.CodeChallenge
 }
 
 type OpenIDProviderAuthorizeOutput struct {
@@ -81,6 +82,7 @@ type OpenIDProviderAuthorizationCodeGrantInput struct {
 	ClientSecret    string
 	Issuer          string
 	Code            string
+	CodeVerifier    string
 	AccessTokenSign string
 	IDTokenSignKey  *rsa.PrivateKey
 }

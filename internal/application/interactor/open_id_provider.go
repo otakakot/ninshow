@@ -113,12 +113,13 @@ func (op *OpenIDProvider) Authorize(
 	}
 
 	if err := op.param.Set(ctx, id, model.AuthorizeParam{
-		RedirectURI:  input.RedirectURI,
-		State:        input.State,
-		ResponseType: input.ResponseType,
-		Scope:        input.Scope,
-		ClientID:     input.ClientID,
-		Nonce:        input.Nonce,
+		RedirectURI:   input.RedirectURI,
+		State:         input.State,
+		ResponseType:  input.ResponseType,
+		Scope:         input.Scope,
+		ClientID:      input.ClientID,
+		Nonce:         input.Nonce,
+		CodeChallenge: input.CodeChallenge,
 	}, time.Second); err != nil {
 		return nil, errors.ErrServerError
 	}
@@ -323,6 +324,12 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 		return nil, fmt.Errorf("failed to get param cache: %w", err)
 	}
 
+	if param.CodeChallenge != nil {
+		if err := param.CodeChallenge.Verify(input.CodeVerifier); err != nil {
+			return nil, fmt.Errorf("failed to verify code challenge: %w", err)
+		}
+	}
+
 	account, err := op.account.Find(ctx, loggedin.AccountID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find account: %w", err)
@@ -379,8 +386,8 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 	}, nil
 }
 
-// RefreshTkenGrant implements usecase.OpenIDProviider.
-func (op *OpenIDProvider) RefreshTkenGrant(
+// RefreshTokenGrant implements usecase.OpenIDProviider.
+func (op *OpenIDProvider) RefreshTokenGrant(
 	ctx context.Context,
 	input usecase.OpenIDProviderRefreshTokenGrantInput,
 ) (*usecase.OpenIDProviderRefreshTokenGrantOutput, error) {

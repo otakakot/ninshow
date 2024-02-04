@@ -124,14 +124,24 @@ func (ctl *Controller) OpAuthorize(
 	end := log.StartEnd(ctx)
 	defer end()
 
+	var challenge *model.CodeChallenge
+
+	if params.CodeChallenge.Value != "" {
+		challenge = &model.CodeChallenge{
+			Challenge: params.CodeChallenge.Value,
+			Method:    model.CodeChallengeMethod(params.CodeChallengeMethod.Value),
+		}
+	}
+
 	output, err := ctl.op.Authorize(ctx, usecase.OpenIDProviderAuthorizeInput{
-		LoginURL:     fmt.Sprintf("%s/op/login", ctl.config.SelfEndpoint()),
-		ResponseType: string(params.ResponseType),
-		Scope:        strings.Split(params.Scope, " "),
-		ClientID:     params.ClientID.String(),
-		RedirectURI:  params.RedirectURI.String(),
-		State:        params.State.Value,
-		Nonce:        params.Nonce.Value,
+		LoginURL:      fmt.Sprintf("%s/op/login", ctl.config.SelfEndpoint()),
+		ResponseType:  string(params.ResponseType),
+		Scope:         strings.Split(params.Scope, " "),
+		ClientID:      params.ClientID.String(),
+		RedirectURI:   params.RedirectURI.String(),
+		State:         params.State.Value,
+		Nonce:         params.Nonce.Value,
+		CodeChallenge: challenge,
 	})
 	if err != nil {
 		slog.Warn(err.Error())
@@ -300,6 +310,7 @@ func (ctl *Controller) OpToken(
 			ClientSecret:    req.ClientSecret.Value,
 			Issuer:          ctl.config.SelfEndpoint(),
 			Code:            req.Code,
+			CodeVerifier:    req.CodeVerifier.Value,
 			AccessTokenSign: ctl.config.AcessTokenSign(),
 			IDTokenSignKey:  ctl.config.IDTokenSignKey(),
 		})
@@ -329,7 +340,7 @@ func (ctl *Controller) OpToken(
 	case api.OPTokenRequestSchemaGrantTypeRefreshToken:
 		scope := append(make([]string, 0, 3), strings.Split(req.Scope.Value, " ")...)
 
-		output, err := ctl.op.RefreshTkenGrant(ctx, usecase.OpenIDProviderRefreshTokenGrantInput{
+		output, err := ctl.op.RefreshTokenGrant(ctx, usecase.OpenIDProviderRefreshTokenGrantInput{
 			RefreshToken:    req.RefreshToken.Value,
 			ClientID:        req.ClientID.Value,
 			Scope:           scope,
@@ -428,6 +439,7 @@ func (ctl *Controller) RpCallback(
 
 	output, err := ctl.rp.Callback(ctx, usecase.RelyingPartyCallbackInput{
 		Code:         params.Code,
+		State:        params.QueryState,
 		OIDCEndpoint: ctl.config.SelfEndpoint(),
 		ClientID:     ctl.config.RelyingPartyID(),
 		ClientSecret: ctl.config.RelyingPartySecret(),

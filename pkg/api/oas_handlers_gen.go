@@ -622,6 +622,14 @@ func (s *Server) handleOpAuthorizeRequest(args [0]string, argsEscaped bool, w ht
 					Name: "nonce",
 					In:   "query",
 				}: params.Nonce,
+				{
+					Name: "code_challenge",
+					In:   "query",
+				}: params.CodeChallenge,
+				{
+					Name: "code_challenge_method",
+					In:   "query",
+				}: params.CodeChallengeMethod,
 			},
 			Raw: r,
 		}

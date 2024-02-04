@@ -13,20 +13,25 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/otakakot/ninshow/internal/application/usecase"
+	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/pkg/api"
 	"github.com/otakakot/ninshow/pkg/log"
 )
 
 var _ usecase.RelyingParty = (*RelyingParty)(nil)
 
-type RelyingParty struct{}
+type RelyingParty struct {
+	verifieis map[string]string
+}
 
 func NewRelyingParty() *RelyingParty {
-	return &RelyingParty{}
+	return &RelyingParty{
+		verifieis: make(map[string]string),
+	}
 }
 
 // Login implements usecase.RelyingParty.
-func (*RelyingParty) Login(
+func (rp *RelyingParty) Login(
 	ctx context.Context,
 	input usecase.RelyingPartyLoginInput,
 ) (*usecase.RelyingPartyLoginOutput, error) {
@@ -49,13 +54,21 @@ func (*RelyingParty) Login(
 		HttpOnly: true,
 	}
 
+	velifier := model.GenerateCodeVerifier()
+
+	challenge := model.GenerateCodeChallenge(velifier)
+
+	rp.verifieis[state] = velifier
+
 	values := url.Values{
-		"response_type": {"code"},                         // Authorization Flow なので code を指定
-		"client_id":     {input.ClientID},                 // RPを識別するためのID OPに登録しておく必要がある
-		"redirect_uri":  {input.RedirectURI},              // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
-		"scope":         {strings.Join(input.Scope, " ")}, // RPが要求するスコープ OPに登録しておく必要がある
-		"state":         {state},                          // CSRF対策のためのstate
-		"nonce":         {uuid.NewString()},               // CSRF対策のためのnonce
+		"response_type":         {"code"},                         // Authorization Flow なので code を指定
+		"client_id":             {input.ClientID},                 // RPを識別するためのID OPに登録しておく必要がある
+		"redirect_uri":          {input.RedirectURI},              // ログイン後にリダイレクトさせるURL OPに登録しておく必要がある
+		"scope":                 {strings.Join(input.Scope, " ")}, // RPが要求するスコープ OPに登録しておく必要がある
+		"state":                 {state},                          // CSRF対策のためのstate
+		"nonce":                 {uuid.NewString()},               // CSRF対策のためのnonce
+		"code_challenge":        {challenge.Challenge},            // PKCEのためのcode_challenge
+		"code_challenge_method": {string(challenge.Method)},
 	}
 
 	buf.WriteByte('?')
@@ -71,7 +84,7 @@ func (*RelyingParty) Login(
 }
 
 // Callback implements usecase.RelyingParty.
-func (*RelyingParty) Callback(
+func (rp *RelyingParty) Callback(
 	ctx context.Context,
 	input usecase.RelyingPartyCallbackInput,
 ) (*usecase.RelyingPartyCallbackOutput, error) {
@@ -86,6 +99,11 @@ func (*RelyingParty) Callback(
 
 	redirectURI, _ := url.Parse("")
 
+	verifier, ok := rp.verifieis[input.State]
+	if !ok {
+		return nil, fmt.Errorf("failed to get verifier: %w", err)
+	}
+
 	res, err := cli.OpToken(ctx, &api.OPTokenRequestSchema{
 		GrantType:    api.OPTokenRequestSchemaGrantTypeAuthorizationCode,
 		Code:         input.Code,
@@ -93,6 +111,7 @@ func (*RelyingParty) Callback(
 		ClientID:     api.NewOptString(input.ClientID),
 		ClientSecret: api.NewOptString(input.ClientSecret),
 		Scope:        api.NewOptString("openid profile email"),
+		CodeVerifier: api.NewOptString(verifier),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to request token: %w", err)

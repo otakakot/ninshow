@@ -324,6 +324,15 @@ func (s OpAuthorizeBadRequestError) Validate() error {
 	}
 }
 
+func (s OpAuthorizeCodeChallengeMethod) Validate() error {
+	switch s {
+	case "S256":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *OpAuthorizeForbidden) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer

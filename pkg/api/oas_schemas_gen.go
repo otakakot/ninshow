@@ -507,6 +507,8 @@ type OPTokenRequestSchema struct {
 	// Client_secret.
 	ClientSecret OptString `json:"client_secret"`
 	Scope        OptString `json:"scope"`
+	// Code_verifier.
+	CodeVerifier OptString `json:"code_verifier"`
 }
 
 // GetGrantType returns the value of GrantType.
@@ -544,6 +546,11 @@ func (s *OPTokenRequestSchema) GetScope() OptString {
 	return s.Scope
 }
 
+// GetCodeVerifier returns the value of CodeVerifier.
+func (s *OPTokenRequestSchema) GetCodeVerifier() OptString {
+	return s.CodeVerifier
+}
+
 // SetGrantType sets the value of GrantType.
 func (s *OPTokenRequestSchema) SetGrantType(val OPTokenRequestSchemaGrantType) {
 	s.GrantType = val
@@ -577,6 +584,11 @@ func (s *OPTokenRequestSchema) SetClientSecret(val OptString) {
 // SetScope sets the value of Scope.
 func (s *OPTokenRequestSchema) SetScope(val OptString) {
 	s.Scope = val
+}
+
+// SetCodeVerifier sets the value of CodeVerifier.
+func (s *OPTokenRequestSchema) SetCodeVerifier(val OptString) {
+	s.CodeVerifier = val
 }
 
 // Grant_type.
@@ -881,6 +893,40 @@ func (s *OpAuthorizeBadRequestError) UnmarshalText(data []byte) error {
 		return nil
 	case OpAuthorizeBadRequestErrorInvalidScope:
 		*s = OpAuthorizeBadRequestErrorInvalidScope
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type OpAuthorizeCodeChallengeMethod string
+
+const (
+	OpAuthorizeCodeChallengeMethodS256 OpAuthorizeCodeChallengeMethod = "S256"
+)
+
+// AllValues returns all OpAuthorizeCodeChallengeMethod values.
+func (OpAuthorizeCodeChallengeMethod) AllValues() []OpAuthorizeCodeChallengeMethod {
+	return []OpAuthorizeCodeChallengeMethod{
+		OpAuthorizeCodeChallengeMethodS256,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OpAuthorizeCodeChallengeMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case OpAuthorizeCodeChallengeMethodS256:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OpAuthorizeCodeChallengeMethod) UnmarshalText(data []byte) error {
+	switch OpAuthorizeCodeChallengeMethod(data) {
+	case OpAuthorizeCodeChallengeMethodS256:
+		*s = OpAuthorizeCodeChallengeMethodS256
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -1434,6 +1480,52 @@ func (o OptOpAuthorizeBadRequestError) Get() (v OpAuthorizeBadRequestError, ok b
 
 // Or returns value if set, or given parameter if does not.
 func (o OptOpAuthorizeBadRequestError) Or(d OpAuthorizeBadRequestError) OpAuthorizeBadRequestError {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptOpAuthorizeCodeChallengeMethod returns new OptOpAuthorizeCodeChallengeMethod with value set to v.
+func NewOptOpAuthorizeCodeChallengeMethod(v OpAuthorizeCodeChallengeMethod) OptOpAuthorizeCodeChallengeMethod {
+	return OptOpAuthorizeCodeChallengeMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOpAuthorizeCodeChallengeMethod is optional OpAuthorizeCodeChallengeMethod.
+type OptOpAuthorizeCodeChallengeMethod struct {
+	Value OpAuthorizeCodeChallengeMethod
+	Set   bool
+}
+
+// IsSet returns true if OptOpAuthorizeCodeChallengeMethod was set.
+func (o OptOpAuthorizeCodeChallengeMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOpAuthorizeCodeChallengeMethod) Reset() {
+	var v OpAuthorizeCodeChallengeMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOpAuthorizeCodeChallengeMethod) SetTo(v OpAuthorizeCodeChallengeMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOpAuthorizeCodeChallengeMethod) Get() (v OpAuthorizeCodeChallengeMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOpAuthorizeCodeChallengeMethod) Or(d OpAuthorizeCodeChallengeMethod) OpAuthorizeCodeChallengeMethod {
 	if v, ok := o.Get(); ok {
 		return v
 	}

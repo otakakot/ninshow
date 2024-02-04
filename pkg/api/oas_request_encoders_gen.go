@@ -260,6 +260,22 @@ func encodeOpTokenRequest(
 			return errors.Wrap(err, "encode query")
 		}
 	}
+	{
+		// Encode "code_verifier" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "code_verifier",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.CodeVerifier.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
 	encoded := q.Values().Encode()
 	ht.SetBody(r, strings.NewReader(encoded), contentType)
 	return nil
