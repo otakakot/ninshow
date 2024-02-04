@@ -57,7 +57,7 @@ func (*OpenIDProvider) Configuration(
 	end := log.StartEnd(ctx)
 	defer end()
 
-	endpoint := "http://localhost:5555"
+	endpoint := "http://localhost:8080"
 
 	issuer, _ := url.Parse(endpoint)
 

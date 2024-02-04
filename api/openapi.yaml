@@ -3,7 +3,7 @@ info:
   title: NinShow APP
   description: |-
     This is the NinShow APP API documentation.
-  termsOfService: https://localhost:5555
+  termsOfService: https://localhost:8080
   contact:
     email: kotaro.otaka@example.com
   license:
@@ -13,7 +13,7 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-  - url: http://localhost:5555
+  - url: http://localhost:8080
 tags:
   - name: Health
     description: Health
@@ -96,7 +96,7 @@ paths:
               schema:
                 type: string
                 format: uri
-                example: http://localhost:5555
+                example: http://localhost:8080
         '400':
           description: Bad Request
         '500':
@@ -181,15 +181,15 @@ paths:
           schema:
             type: string
             format: uri
-            example: http://localhost:5555
+            example: http://localhost:8080
         - name: redirect_uri
           in: query
           required: true
-          description: http://localhost:5555/rp/callback
+          description: http://localhost:8080/rp/callback
           schema:
             type: string
             format: uri
-            example: http://localhost:5555/rp/callback
+            example: http://localhost:8080/rp/callback
         - name: state
           in: query
           required: false
@@ -212,7 +212,7 @@ paths:
               schema:
                 type: string
                 format: uri
-                example: http://localhost:5555/rp/callback
+                example: http://localhost:8080/rp/callback
         '400':
           description: Bad Request
           content:
@@ -316,7 +316,7 @@ paths:
               schema:
                 type: string
                 format: uri
-                example: http://localhost:5555/op/callback
+                example: http://localhost:8080/op/callback
         '500':
           description: Internal Server Error
   /op/callback:
@@ -342,7 +342,7 @@ paths:
               schema:
                 type: string
                 format: uri
-                example: http://localhost:5555/rp/callback
+                example: http://localhost:8080/rp/callback
         '500':
           description: Internal Server Error
   /op/token:
@@ -472,7 +472,7 @@ paths:
               schema:
                 type: string
                 format: uri
-                example: http://localhost:5555/op/authorize
+                example: http://localhost:8080/op/authorize
             Set-Cookie:
               schema: 
                 type: string
@@ -565,34 +565,34 @@ components:
       properties:
         issuer:
           type: string
-          description: http://localhost:5555/op
+          description: http://localhost:8080/op
           format: uri
-          example: http://localhost:5555/op
+          example: http://localhost:8080/op
         authorization_endpoint:
           type: string
-          description: http://localhost:5555/op/authorize
+          description: http://localhost:8080/op/authorize
           format: uri
-          example: http://localhost:5555/op/authorize
+          example: http://localhost:8080/op/authorize
         token_endpoint:
           type: string
-          description: http://localhost:5555/op/token
+          description: http://localhost:8080/op/token
           format: uri
-          example: http://localhost:5555/op/token
+          example: http://localhost:8080/op/token
         userinfo_endpoint:
           type: string
-          description: http://localhost:5555/op/userinfo
+          description: http://localhost:8080/op/userinfo
           format: uri
-          example: http://localhost:5555/op/userinfo
+          example: http://localhost:8080/op/userinfo
         jwks_uri:
           type: string
-          description: http://localhost:5555/op/certs
+          description: http://localhost:8080/op/certs
           format: uri
-          example: http://localhost:5555/op/certs
+          example: http://localhost:8080/op/certs
         revocation_endpoint:
           type: string
-          description: http://localhost:5555/op/revoke
+          description: http://localhost:8080/op/revoke
           format: uri
-          example: http://localhost:5555/op/revoke
+          example: http://localhost:8080/op/revoke
       required:
         - issuer
         - authorization_endpoint
@@ -636,9 +636,9 @@ components:
           example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         redirect_uri:
           type: string
-          description: http://localhost:5555/rp/callback
+          description: http://localhost:8080/rp/callback
           format: uri
-          example: http://localhost:5555/rp/callback
+          example: http://localhost:8080/rp/callback
         refresh_token:
           type: string
           description: refresh_token

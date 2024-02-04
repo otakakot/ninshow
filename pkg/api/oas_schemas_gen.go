@@ -345,17 +345,17 @@ func (s *OPLoginRequestSchema) SetPassword(val string) {
 
 // Ref: #/components/schemas/OPOpenIDConfigurationResponseSchema
 type OPOpenIDConfigurationResponseSchema struct {
-	// Http://localhost:5555/op.
+	// Http://localhost:8080/op.
 	Issuer url.URL `json:"issuer"`
-	// Http://localhost:5555/op/authorize.
+	// Http://localhost:8080/op/authorize.
 	AuthorizationEndpoint url.URL `json:"authorization_endpoint"`
-	// Http://localhost:5555/op/token.
+	// Http://localhost:8080/op/token.
 	TokenEndpoint url.URL `json:"token_endpoint"`
-	// Http://localhost:5555/op/userinfo.
+	// Http://localhost:8080/op/userinfo.
 	UserinfoEndpoint url.URL `json:"userinfo_endpoint"`
-	// Http://localhost:5555/op/certs.
+	// Http://localhost:8080/op/certs.
 	JwksURI url.URL `json:"jwks_uri"`
-	// Http://localhost:5555/op/revoke.
+	// Http://localhost:8080/op/revoke.
 	RevocationEndpoint url.URL `json:"revocation_endpoint"`
 }
 
@@ -498,7 +498,7 @@ type OPTokenRequestSchema struct {
 	GrantType OPTokenRequestSchemaGrantType `json:"grant_type"`
 	// Code.
 	Code string `json:"code"`
-	// Http://localhost:5555/rp/callback.
+	// Http://localhost:8080/rp/callback.
 	RedirectURI url.URL `json:"redirect_uri"`
 	// Refresh_token.
 	RefreshToken OptString `json:"refresh_token"`

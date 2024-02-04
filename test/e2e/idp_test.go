@@ -15,7 +15,7 @@ func TestIdP(t *testing.T) {
 
 	endpoint := os.Getenv("ENDPOINT")
 	if endpoint == "" {
-		endpoint = "http://localhost:5555"
+		endpoint = "http://localhost:8080"
 	}
 
 	cli, err := api.NewClient(endpoint, nil)

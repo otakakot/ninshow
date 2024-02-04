@@ -30,7 +30,7 @@ func NewConfig() *Config {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "5555"
+		port = "8080"
 	}
 
 	self := os.Getenv("SELF_ENDPOINT")

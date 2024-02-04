@@ -18,7 +18,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 	endpoint := os.Getenv("ENDPOINT")
 	if endpoint == "" {
-		endpoint = "http://localhost:5555"
+		endpoint = "http://localhost:8080"
 	}
 
 	cli, err := api.NewClient(endpoint, nil)
@@ -59,7 +59,7 @@ func TestAuthorizationCodeGrant(t *testing.T) {
 
 		// NOTE: http.Get は 302 が返ってくるとリダイレクトしてくれるらしい
 		// NOTE: ogen は上記想定が考慮できていないためうまくレスポンスをデコードできない
-		// redirectURI, _ := url.ParseRequestURI("http://localhost:5555")
+		// redirectURI, _ := url.ParseRequestURI("http://localhost:8080")
 		// res, err := cli.OpAuthorize(context.Background(), api.OpAuthorizeParams{
 		// 	ResponseType: "code",
 		// 	Scope:        "openid",

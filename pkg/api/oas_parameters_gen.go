@@ -190,7 +190,7 @@ type OpAuthorizeParams struct {
 	Scope string
 	// Client_id.
 	ClientID url.URL
-	// Http://localhost:5555/rp/callback.
+	// Http://localhost:8080/rp/callback.
 	RedirectURI url.URL
 	// State.
 	State OptString
