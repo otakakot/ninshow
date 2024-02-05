@@ -84,7 +84,6 @@ type OpenIDProviderAuthorizationCodeGrantInput struct {
 	Code            string
 	CodeVerifier    string
 	AccessTokenSign string
-	IDTokenSignKey  *rsa.PrivateKey
 }
 
 type OpenIDProviderAuthorizationCodeGrantOutput struct {
@@ -102,7 +101,6 @@ type OpenIDProviderRefreshTokenGrantInput struct {
 	Scope           []string
 	Issuer          string
 	AccessTokenSign string
-	IDTokenSignKey  *rsa.PrivateKey
 }
 
 type OpenIDProviderRefreshTokenGrantOutput struct {
@@ -126,16 +124,10 @@ type OpenIDProviderUserinfoOutput struct {
 }
 
 type OpenIDProviderCertsInput struct {
-	PublicKey rsa.PublicKey
 }
 
 type OpenIDProviderCertsOutput struct {
-	Kid string // Kid 鍵識別子
-	Kty string // Kty RSAやEC等の暗号アルゴリズファミリー
-	Use string // Use 公開鍵の用途
-	Alg string // Alg 署名検証アルゴリズム
-	N   string // N modulus 公開鍵を復元するための公開鍵の絶対値
-	E   string // E exponent 公開鍵を復元するための指数値
+	Certs []model.Cert
 }
 
 type OpenIDProviderRevokeInput struct {

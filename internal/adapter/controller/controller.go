@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -18,7 +17,6 @@ import (
 type Config interface {
 	SelfEndpoint() string
 	OIDCEndpoint() string
-	IDTokenSignKey() *rsa.PrivateKey
 	AcessTokenSign() string
 	RelyingPartyID() string
 	RelyingPartySecret() string
@@ -188,7 +186,7 @@ func (ctl *Controller) OpCallback(
 	output, err := ctl.op.Callback(ctx, usecase.OpenIDProviderCallbackInput{
 		ID:             params.ID,
 		Issuer:         ctl.config.SelfEndpoint(),
-		IDTokenSignKey: ctl.config.IDTokenSignKey(),
+		IDTokenSignKey: nil,
 	})
 	if err != nil {
 		return &api.OpCallbackInternalServerError{}, err
@@ -205,24 +203,26 @@ func (ctl *Controller) OpCallback(
 func (ctl *Controller) OpCerts(
 	ctx context.Context,
 ) (api.OpCertsRes, error) {
-	output, err := ctl.op.Certs(ctx, usecase.OpenIDProviderCertsInput{
-		PublicKey: ctl.config.IDTokenSignKey().PublicKey,
-	})
+	output, err := ctl.op.Certs(ctx, usecase.OpenIDProviderCertsInput{})
 	if err != nil {
 		return &api.OpCertsInternalServerError{}, err
 	}
 
+	keys := make([]api.OPJWKSetKey, len(output.Certs))
+
+	for i, v := range output.Certs {
+		keys[i] = api.OPJWKSetKey{
+			Kid: v.Kid,
+			Kty: v.Kty,
+			Use: v.Use,
+			Alg: v.Alg,
+			N:   v.N,
+			E:   v.E,
+		}
+	}
+
 	return &api.OPJWKSetResponseSchema{
-		Keys: []api.OPJWKSetKey{
-			{
-				Kid: output.Kid,
-				Kty: output.Kty,
-				Use: output.Use,
-				Alg: output.Alg,
-				N:   output.N,
-				E:   output.E,
-			},
-		},
+		Keys: keys,
 	}, nil
 }
 
@@ -312,7 +312,6 @@ func (ctl *Controller) OpToken(
 			Code:            req.Code,
 			CodeVerifier:    req.CodeVerifier.Value,
 			AccessTokenSign: ctl.config.AcessTokenSign(),
-			IDTokenSignKey:  ctl.config.IDTokenSignKey(),
 		})
 		if err != nil {
 			return &api.OpTokenInternalServerError{}, err
@@ -346,7 +345,6 @@ func (ctl *Controller) OpToken(
 			Scope:           scope,
 			Issuer:          ctl.config.SelfEndpoint(),
 			AccessTokenSign: ctl.config.AcessTokenSign(),
-			IDTokenSignKey:  ctl.config.IDTokenSignKey(),
 		})
 		if err != nil {
 			return &api.OpTokenInternalServerError{}, err

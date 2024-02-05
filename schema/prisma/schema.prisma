@@ -24,6 +24,13 @@ model oidc_secrets {
   @@index([client_id])
 }
 
+model jwt_sign_keys {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key        Bytes
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @db.Timestamptz(3)
+}
+
 model accounts {
   id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name           String           @default("")

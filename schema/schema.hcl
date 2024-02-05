@@ -42,6 +42,31 @@ table "accounts" {
     where   = "(NOT deleted)"
   }
 }
+table "jwt_sign_keys" {
+  schema = schema.public
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "key" {
+    null = false
+    type = bytea
+  }
+  column "created_at" {
+    null    = false
+    type    = timestamptz(3)
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "updated_at" {
+    null    = false
+    type    = timestamptz(3)
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+}
 table "oidc_clients" {
   schema = schema.public
   column "id" {

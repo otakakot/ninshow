@@ -20,6 +20,12 @@ type OIDCClient interface {
 	FindSecret(ctx context.Context, id string) ([]byte, error)
 }
 
+type JWTSignKey interface {
+	Save(ctx context.Context, key model.JWTSignKey) error
+	Find(ctx context.Context, id string) (*model.JWTSignKey, error)
+	List(ctx context.Context) ([]model.JWTSignKey, error)
+}
+
 type Cache[T any] interface {
 	Set(ctx context.Context, key string, value T, ttl time.Duration) error
 	Get(ctx context.Context, key string) (T, error)

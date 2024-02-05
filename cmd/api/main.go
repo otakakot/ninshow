@@ -50,6 +50,8 @@ func main() {
 		"http://localhost:3000/api/auth/callback/ninshow",
 	))
 
+	signKeyRepo := gateway.NewJWTSignKey(rdb)
+
 	acc, _ := model.SingupAccount("test", "test@example.com", "test")
 	_ = accountRepo.Save(context.Background(), *acc)
 
@@ -66,6 +68,7 @@ func main() {
 	op := interactor.NewOpenIDProvider(
 		oidcCliRepo,
 		accountRepo,
+		signKeyRepo,
 		paramCache,
 		loggedinCache,
 		atCache,

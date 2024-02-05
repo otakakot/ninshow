@@ -1,7 +1,6 @@
 package model
 
 import (
-	"crypto/rsa"
 	"errors"
 	"time"
 
@@ -52,35 +51,8 @@ func GenerateIDToken(
 	return idt
 }
 
-func (it IDToken) JWT(
-	sign string,
-) string {
-	claims := jwt.MapClaims{
-		"iss":   it.Iss,
-		"sub":   it.Sub,
-		"aud":   it.Aud,
-		"exp":   it.Exp,
-		"iat":   it.Iat,
-		"nonce": it.Nonce,
-	}
-
-	if it.Profile != nil {
-		claims["profile"] = it.Profile
-	}
-
-	if it.Email != nil {
-		claims["email"] = it.Email
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	str, _ := token.SignedString([]byte(sign))
-
-	return str
-}
-
 func (it IDToken) RSA256(
-	key *rsa.PrivateKey,
+	signkey JWTSignKey,
 ) string {
 	claims := jwt.MapClaims{
 		"iss":   it.Iss,
@@ -101,9 +73,9 @@ func (it IDToken) RSA256(
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
-	token.Header["kid"] = "12345678"
+	token.Header["kid"] = signkey.ID
 
-	str, _ := token.SignedString(key)
+	str, _ := token.SignedString(signkey.Key)
 
 	return str
 }

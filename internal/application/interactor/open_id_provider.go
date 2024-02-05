@@ -3,8 +3,6 @@ package interactor
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -25,6 +23,7 @@ var _ usecase.OpenIDProviider = (*OpenIDProvider)(nil)
 type OpenIDProvider struct {
 	client       repository.OIDCClient
 	account      repository.Account
+	signkey      repository.JWTSignKey
 	param        repository.Cache[model.AuthorizeParam]
 	loggedin     repository.Cache[model.LoggedIn]
 	accessToken  repository.Cache[struct{}]
@@ -34,6 +33,7 @@ type OpenIDProvider struct {
 func NewOpenIDProvider(
 	client repository.OIDCClient,
 	account repository.Account,
+	signkey repository.JWTSignKey,
 	param repository.Cache[model.AuthorizeParam],
 	loggedin repository.Cache[model.LoggedIn],
 	accessToken repository.Cache[struct{}],
@@ -42,6 +42,7 @@ func NewOpenIDProvider(
 	return &OpenIDProvider{
 		client:       client,
 		account:      account,
+		signkey:      signkey,
 		loggedin:     loggedin,
 		param:        param,
 		accessToken:  accessToken,
@@ -266,6 +267,11 @@ func (op *OpenIDProvider) Callback(
 			email = &account.Email
 		}
 
+		keys, err := op.signkey.List(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list keys: %w", err)
+		}
+
 		it := model.GenerateIDToken(
 			input.Issuer,
 			account.ID,
@@ -273,7 +279,7 @@ func (op *OpenIDProvider) Callback(
 			val.Nonce,
 			profile,
 			email,
-		).RSA256(input.IDTokenSignKey)
+		).RSA256(keys[0])
 
 		values.Add("id_token", it)
 	}
@@ -367,6 +373,11 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 		email = &account.Email
 	}
 
+	keys, err := op.signkey.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list keys: %w", err)
+	}
+
 	it := model.GenerateIDToken(
 		input.Issuer,
 		loggedin.AccountID,
@@ -374,7 +385,7 @@ func (op *OpenIDProvider) AuthorizationCodeGrant(
 		param.Nonce,
 		profile,
 		email,
-	).RSA256(input.IDTokenSignKey)
+	).RSA256(keys[0])
 
 	return &usecase.OpenIDProviderAuthorizationCodeGrantOutput{
 		TokenType:    "Bearer",
@@ -433,6 +444,11 @@ func (op *OpenIDProvider) RefreshTokenGrant(
 		email = &account.Email
 	}
 
+	keys, err := op.signkey.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list keys: %w", err)
+	}
+
 	it := model.GenerateIDToken(
 		input.Issuer,
 		account.ID,
@@ -440,7 +456,7 @@ func (op *OpenIDProvider) RefreshTokenGrant(
 		"",
 		profile,
 		email,
-	).RSA256(input.IDTokenSignKey)
+	).RSA256(keys[0])
 
 	return &usecase.OpenIDProviderRefreshTokenGrantOutput{
 		TokenType:    "Bearer",
@@ -478,30 +494,22 @@ func (op *OpenIDProvider) Userinfo(
 }
 
 // Certs implements usecase.OpenIDProviider.
-func (*OpenIDProvider) Certs(
-	_ context.Context,
+func (op *OpenIDProvider) Certs(
+	ctx context.Context,
 	input usecase.OpenIDProviderCertsInput,
 ) (*usecase.OpenIDProviderCertsOutput, error) {
-	data := make([]byte, 8)
-
-	binary.BigEndian.PutUint64(data, uint64(input.PublicKey.E))
-
-	i := 0
-	for ; i < len(data); i++ {
-		if data[i] != 0x0 {
-			break
-		}
+	keys, err := op.signkey.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list keys: %w", err)
 	}
 
-	e := base64.RawURLEncoding.EncodeToString(data[i:])
+	cers := make([]model.Cert, len(keys))
+	for i, key := range keys {
+		cers[i] = key.Cert()
+	}
 
 	return &usecase.OpenIDProviderCertsOutput{
-		Kid: "12345678",
-		Kty: "RSA",
-		Use: "sig",
-		Alg: "RS256",
-		N:   base64.RawURLEncoding.EncodeToString(input.PublicKey.N.Bytes()),
-		E:   e,
+		Certs: cers,
 	}, nil
 }
 
