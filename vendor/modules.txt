@@ -42,7 +42,7 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
-# github.com/ogen-go/ogen v0.81.2
+# github.com/ogen-go/ogen v0.82.0
 ## explicit; go 1.20
 github.com/ogen-go/ogen/conv
 github.com/ogen-go/ogen/http
@@ -116,7 +116,7 @@ golang.org/x/crypto/blowfish
 golang.org/x/exp/constraints
 golang.org/x/exp/maps
 golang.org/x/exp/slices
-# golang.org/x/net v0.20.0
+# golang.org/x/net v0.21.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/idna
