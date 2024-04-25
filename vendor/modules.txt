@@ -61,9 +61,10 @@ github.com/ogen-go/ogen/openapi
 github.com/ogen-go/ogen/otelogen
 github.com/ogen-go/ogen/uri
 github.com/ogen-go/ogen/validate
-# github.com/rs/cors v1.10.1
+# github.com/rs/cors v1.11.0
 ## explicit; go 1.13
 github.com/rs/cors
+github.com/rs/cors/internal
 # github.com/segmentio/asm v1.2.0
 ## explicit; go 1.18
 github.com/segmentio/asm/base64
