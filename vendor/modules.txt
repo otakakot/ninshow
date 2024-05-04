@@ -5,6 +5,9 @@ github.com/dlclark/regexp2/syntax
 # github.com/fatih/color v1.16.0
 ## explicit; go 1.17
 github.com/fatih/color
+# github.com/friendsofgo/errors v0.9.2
+## explicit; go 1.13
+github.com/friendsofgo/errors
 # github.com/ghodss/yaml v1.0.0
 ## explicit
 github.com/ghodss/yaml
@@ -74,6 +77,23 @@ github.com/segmentio/asm/cpu/arm64
 github.com/segmentio/asm/cpu/cpuid
 github.com/segmentio/asm/cpu/x86
 github.com/segmentio/asm/internal/unsafebytes
+# github.com/spf13/cast v1.5.0
+## explicit; go 1.18
+github.com/spf13/cast
+# github.com/volatiletech/inflect v0.0.1
+## explicit; go 1.14
+github.com/volatiletech/inflect
+# github.com/volatiletech/sqlboiler/v4 v4.16.2
+## explicit; go 1.16
+github.com/volatiletech/sqlboiler/v4/boil
+github.com/volatiletech/sqlboiler/v4/drivers
+github.com/volatiletech/sqlboiler/v4/importers
+github.com/volatiletech/sqlboiler/v4/queries
+github.com/volatiletech/sqlboiler/v4/queries/qm
+github.com/volatiletech/sqlboiler/v4/queries/qmhelper
+# github.com/volatiletech/strmangle v0.0.6
+## explicit; go 1.14
+github.com/volatiletech/strmangle
 # go.opentelemetry.io/otel v1.26.0
 ## explicit; go 1.21
 go.opentelemetry.io/otel
@@ -136,6 +156,10 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/unicode/rangetable
+# golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f
+## explicit; go 1.17
+golang.org/x/xerrors
+golang.org/x/xerrors/internal
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2

@@ -8,8 +8,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+
 	"github.com/otakakot/ninshow/internal/domain/model"
 	"github.com/otakakot/ninshow/internal/domain/repository"
+	"github.com/otakakot/ninshow/pkg/sqlb"
 )
 
 var _ repository.Account = (*Account)(nil)
@@ -36,42 +40,35 @@ func (ac *Account) Save(
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	query := `INSERT INTO accounts (id, email, name) VALUES ($1, $2, $3)`
+	now := time.Now()
 
-	stmt, err := tx.Prepare(query)
-	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf("failed to rollback transaction: %w", err)
-		}
-
-		return fmt.Errorf("failed to prepare statement: %w", err)
+	model := sqlb.Account{
+		ID:        account.ID,
+		Name:      account.Name,
+		Email:     account.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Deleted:   false,
 	}
 
-	if _, err := stmt.ExecContext(ctx, account.ID, account.Email, account.Name); err != nil {
+	if err := model.Insert(ctx, tx, boil.Infer()); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf("failed to rollback transaction: %w", err)
 		}
-
-		return fmt.Errorf("failed to execute statement: %w", err)
 	}
 
-	query = `INSERT INTO password_authns (value, account_id) VALUES ($1, $2)`
-
-	stmt, err = tx.Prepare(query)
-	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf("failed to rollback transaction: %w", err)
-		}
-
-		return fmt.Errorf("failed to prepare statement: %w", err)
+	pass := sqlb.PasswordAuthn{
+		ID:        uuid.NewString(),
+		AccountID: account.ID,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Value:     account.HashPass,
 	}
 
-	if _, err := stmt.ExecContext(ctx, account.HashPass, account.ID); err != nil {
+	if err := pass.Insert(ctx, tx, boil.Infer()); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf("failed to rollback transaction: %w", err)
 		}
-
-		return fmt.Errorf("failed to execute statement: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -189,42 +186,35 @@ func (oc *OIDCClient) Save(
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	query := `INSERT INTO oidc_clients (id, name, redirect_uri) VALUES ($1, $2, $3)`
+	now := time.Now()
 
-	stmt, err := tx.Prepare(query)
-	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf("failed to rollback transaction: %w", err)
-		}
-
-		return fmt.Errorf("failed to prepare statement: %w", err)
+	model := sqlb.OidcClient{
+		ID:          client.ID,
+		Name:        client.Name,
+		RedirectURI: client.RedirectURI,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		Deleted:     false,
 	}
 
-	if _, err := stmt.ExecContext(ctx, client.ID, client.Name, client.RedirectURI); err != nil {
+	if err := model.Insert(ctx, tx, boil.Infer()); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf("failed to rollback transaction: %w", err)
 		}
-
-		return fmt.Errorf("failed to execute statement: %w", err)
 	}
 
-	query = `INSERT INTO oidc_secrets (value, client_id) VALUES ($1, $2)`
-
-	stmt, err = tx.Prepare(query)
-	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			return fmt.Errorf("failed to rollback transaction: %w", err)
-		}
-
-		return fmt.Errorf("failed to prepare statement: %w", err)
+	sec := sqlb.OidcSecret{
+		ID:        uuid.NewString(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		Value:     client.HashSec,
+		ClientID:  client.ID,
 	}
 
-	if _, err := stmt.ExecContext(ctx, client.HashSec, client.ID); err != nil {
+	if err := sec.Insert(ctx, tx, boil.Infer()); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return fmt.Errorf("failed to rollback transaction: %w", err)
 		}
-
-		return fmt.Errorf("failed to execute statement: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {

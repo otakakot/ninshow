@@ -41,6 +41,7 @@ update: ## go modules update
 .PHONY: gen
 gen: ## Generate code.
 	@go generate ./...
+	@sqlboiler psql
 	@go mod tidy
 	@go mod vendor
 
