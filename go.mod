@@ -10,9 +10,9 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/ogen-go/ogen v1.1.1
 	github.com/rs/cors v1.11.0
-	go.opentelemetry.io/otel v1.26.0
-	go.opentelemetry.io/otel/metric v1.26.0
-	go.opentelemetry.io/otel/trace v1.26.0
+	go.opentelemetry.io/otel v1.27.0
+	go.opentelemetry.io/otel/metric v1.27.0
+	go.opentelemetry.io/otel/trace v1.27.0
 	go.uber.org/multierr v1.11.0
 	golang.org/x/crypto v0.23.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
