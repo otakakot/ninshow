@@ -18,7 +18,7 @@ github.com/go-faster/jx/internal/byteseq
 # github.com/go-faster/yaml v0.4.6
 ## explicit; go 1.18
 github.com/go-faster/yaml
-# github.com/go-logr/logr v1.4.1
+# github.com/go-logr/logr v1.4.2
 ## explicit; go 1.18
 github.com/go-logr/logr
 github.com/go-logr/logr/funcr
@@ -112,12 +112,12 @@ go.uber.org/zap/zapcore
 ## explicit; go 1.18
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-# golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+# golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8
 ## explicit; go 1.20
 golang.org/x/exp/constraints
 golang.org/x/exp/maps
 golang.org/x/exp/slices
-# golang.org/x/net v0.25.0
+# golang.org/x/net v0.26.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/idna
